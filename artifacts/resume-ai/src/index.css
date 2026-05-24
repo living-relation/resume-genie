@@ -66,14 +66,31 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* LIGHT MODE — Indigo/slate professional palette */
+/* ─── SHARED UTIL VARS ─────────────────────────────────────────── */
 :root {
-  --button-outline: rgba(0,0,0, .10);
-  --badge-outline: rgba(0,0,0, .05);
+  --button-outline: rgba(0,0,0,.10);
+  --badge-outline: rgba(0,0,0,.05);
   --opaque-button-border-intensity: -8;
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
+  --elevate-1: rgba(0,0,0,.03);
+  --elevate-2: rgba(0,0,0,.08);
+  --app-font-sans: 'Inter', system-ui, sans-serif;
+  --app-font-serif: Georgia, serif;
+  --app-font-mono: 'JetBrains Mono', Menlo, monospace;
+  --radius: 0.5rem;
+  --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0,0.04);
+  --shadow-xs:  0px 1px 3px 0px rgba(0,0,0,0.06);
+  --shadow-sm:  0px 1px 3px 0px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.04);
+  --shadow:     0px 2px 4px 0px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.04);
+  --shadow-md:  0px 4px 8px -2px rgba(0,0,0,0.08), 0px 2px 4px -2px rgba(0,0,0,0.04);
+  --shadow-lg:  0px 8px 16px -4px rgba(0,0,0,0.10), 0px 4px 6px -4px rgba(0,0,0,0.04);
+  --shadow-xl:  0px 20px 24px -8px rgba(0,0,0,0.12), 0px 8px 10px -6px rgba(0,0,0,0.04);
+  --shadow-2xl: 0px 24px 48px -12px rgba(0,0,0,0.18);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+}
 
+/* ─── LIGHT THEME (default) ────────────────────────────────────── */
+:root {
   --background: 220 20% 97%;
   --foreground: 224 71% 10%;
   --border: 220 13% 88%;
@@ -109,43 +126,22 @@
   --chart-4: 340 65% 55%;
   --chart-5: 200 70% 50%;
 
-  --app-font-sans: 'Inter', system-ui, sans-serif;
-  --app-font-serif: Georgia, serif;
-  --app-font-mono: 'JetBrains Mono', Menlo, monospace;
-  --radius: 0.5rem;
-  --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0,0.04);
-  --shadow-xs: 0px 1px 3px 0px rgba(0,0,0,0.06);
-  --shadow-sm: 0px 1px 3px 0px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.04);
-  --shadow: 0px 2px 4px 0px rgba(0,0,0,0.06), 0px 1px 2px -1px rgba(0,0,0,0.04);
-  --shadow-md: 0px 4px 8px -2px rgba(0,0,0,0.08), 0px 2px 4px -2px rgba(0,0,0,0.04);
-  --shadow-lg: 0px 8px 16px -4px rgba(0,0,0,0.10), 0px 4px 6px -4px rgba(0,0,0,0.04);
-  --shadow-xl: 0px 20px 24px -8px rgba(0,0,0,0.12), 0px 8px 10px -6px rgba(0,0,0,0.04);
-  --shadow-2xl: 0px 24px 48px -12px rgba(0,0,0,0.18);
-  --tracking-normal: 0em;
-  --spacing: 0.25rem;
-
-  --sidebar-primary-border: hsl(var(--sidebar-primary));
   --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-  --sidebar-accent-border: hsl(var(--sidebar-accent));
   --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-  --primary-border: hsl(var(--primary));
   --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-  --secondary-border: hsl(var(--secondary));
   --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-  --muted-border: hsl(var(--muted));
   --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-  --accent-border: hsl(var(--accent));
   --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-  --destructive-border: hsl(var(--destructive));
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
+/* ─── DARK THEME ────────────────────────────────────────────────── */
 .dark {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
+  --button-outline: rgba(255,255,255,.10);
+  --badge-outline: rgba(255,255,255,.05);
   --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  --elevate-1: rgba(255,255,255,.04);
+  --elevate-2: rgba(255,255,255,.09);
 
   --background: 224 30% 9%;
   --foreground: 210 40% 94%;
@@ -183,54 +179,149 @@
   --chart-5: 200 70% 55%;
 
   --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0,0.3);
-  --shadow-xs: 0px 1px 3px 0px rgba(0,0,0,0.4);
-  --shadow-sm: 0px 1px 3px 0px rgba(0,0,0,0.4), 0px 1px 2px -1px rgba(0,0,0,0.3);
-  --shadow: 0px 2px 4px 0px rgba(0,0,0,0.4), 0px 1px 2px -1px rgba(0,0,0,0.3);
-  --shadow-md: 0px 4px 8px -2px rgba(0,0,0,0.5), 0px 2px 4px -2px rgba(0,0,0,0.3);
-  --shadow-lg: 0px 8px 16px -4px rgba(0,0,0,0.6), 0px 4px 6px -4px rgba(0,0,0,0.3);
-  --shadow-xl: 0px 20px 24px -8px rgba(0,0,0,0.7), 0px 8px 10px -6px rgba(0,0,0,0.3);
+  --shadow-xs:  0px 1px 3px 0px rgba(0,0,0,0.4);
+  --shadow-sm:  0px 1px 3px 0px rgba(0,0,0,0.4), 0px 1px 2px -1px rgba(0,0,0,0.3);
+  --shadow:     0px 2px 4px 0px rgba(0,0,0,0.4), 0px 1px 2px -1px rgba(0,0,0,0.3);
+  --shadow-md:  0px 4px 8px -2px rgba(0,0,0,0.5), 0px 2px 4px -2px rgba(0,0,0,0.3);
+  --shadow-lg:  0px 8px 16px -4px rgba(0,0,0,0.6), 0px 4px 6px -4px rgba(0,0,0,0.3);
+  --shadow-xl:  0px 20px 24px -8px rgba(0,0,0,0.7), 0px 8px 10px -6px rgba(0,0,0,0.3);
   --shadow-2xl: 0px 24px 48px -12px rgba(0,0,0,0.8);
+
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+/* ─── STEAMPUNK THEME ───────────────────────────────────────────── */
+html[data-theme="steampunk"] {
+  --button-outline: rgba(255,200,100,.12);
+  --badge-outline: rgba(255,200,100,.06);
+  --opaque-button-border-intensity: 9;
+  --elevate-1: rgba(200,150,50,.06);
+  --elevate-2: rgba(200,150,50,.12);
+
+  --background: 24 18% 10%;
+  --foreground: 42 65% 78%;
+  --border: 32 22% 22%;
+  --card: 24 18% 13%;
+  --card-foreground: 42 65% 78%;
+  --card-border: 32 22% 20%;
+  --sidebar: 20 22% 7%;
+  --sidebar-foreground: 42 50% 68%;
+  --sidebar-border: 20 18% 13%;
+  --sidebar-primary: 38 72% 48%;
+  --sidebar-primary-foreground: 24 25% 8%;
+  --sidebar-accent: 24 18% 15%;
+  --sidebar-accent-foreground: 42 50% 68%;
+  --sidebar-ring: 38 72% 48%;
+  --popover: 24 18% 13%;
+  --popover-foreground: 42 65% 78%;
+  --popover-border: 32 22% 22%;
+  --primary: 38 72% 48%;
+  --primary-foreground: 24 25% 8%;
+  --secondary: 24 18% 17%;
+  --secondary-foreground: 42 50% 65%;
+  --muted: 24 18% 17%;
+  --muted-foreground: 38 22% 48%;
+  --accent: 32 35% 20%;
+  --accent-foreground: 42 65% 78%;
+  --destructive: 0 55% 44%;
+  --destructive-foreground: 42 65% 78%;
+  --input: 24 18% 20%;
+  --ring: 38 72% 48%;
+  --chart-1: 38 72% 48%;
+  --chart-2: 20 55% 40%;
+  --chart-3: 50 70% 50%;
+  --chart-4: 0 55% 44%;
+  --chart-5: 60 50% 42%;
+
+  --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0,0.5);
+  --shadow-xs:  0px 1px 3px 0px rgba(0,0,0,0.6);
+  --shadow-sm:  0px 1px 3px 0px rgba(0,0,0,0.5), 0px 1px 2px -1px rgba(0,0,0,0.4);
+  --shadow:     0px 2px 4px 0px rgba(0,0,0,0.5), 0px 1px 2px -1px rgba(0,0,0,0.4);
+
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+/* ─── UNICORN THEME ─────────────────────────────────────────────── */
+html[data-theme="unicorn"] {
+  --button-outline: rgba(0,0,0,.08);
+  --badge-outline: rgba(0,0,0,.04);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(200,0,150,.03);
+  --elevate-2: rgba(200,0,150,.07);
+
+  --background: 290 45% 97%;
+  --foreground: 270 48% 15%;
+  --border: 280 35% 84%;
+  --card: 0 0% 100%;
+  --card-foreground: 270 48% 15%;
+  --card-border: 280 35% 88%;
+  --sidebar: 270 58% 26%;
+  --sidebar-foreground: 280 70% 94%;
+  --sidebar-border: 270 48% 20%;
+  --sidebar-primary: 328 88% 56%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 270 48% 21%;
+  --sidebar-accent-foreground: 280 70% 92%;
+  --sidebar-ring: 328 88% 56%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 270 48% 15%;
+  --popover-border: 280 35% 84%;
+  --primary: 328 85% 56%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 280 38% 91%;
+  --secondary-foreground: 270 45% 20%;
+  --muted: 280 32% 90%;
+  --muted-foreground: 270 18% 52%;
+  --accent: 290 75% 92%;
+  --accent-foreground: 270 60% 30%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --input: 280 35% 85%;
+  --ring: 328 85% 56%;
+  --chart-1: 328 85% 56%;
+  --chart-2: 190 75% 45%;
+  --chart-3: 270 60% 55%;
+  --chart-4: 60 80% 55%;
+  --chart-5: 150 65% 45%;
+
+  --shadow-2xs: 0px 1px 2px 0px rgba(150,0,100,0.06);
+  --shadow-xs:  0px 1px 3px 0px rgba(150,0,100,0.08);
+  --shadow-sm:  0px 1px 3px 0px rgba(150,0,100,0.08), 0px 1px 2px -1px rgba(150,0,100,0.04);
+  --shadow:     0px 2px 4px 0px rgba(150,0,100,0.08), 0px 1px 2px -1px rgba(150,0,100,0.04);
+
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply font-sans antialiased bg-background text-foreground;
-  }
+  * { @apply border-border; }
+  body { @apply font-sans antialiased bg-background text-foreground; }
 }
 
 @layer utilities {
-  input[type="search"]::-webkit-search-cancel-button {
-    @apply hidden;
-  }
+  input[type="search"]::-webkit-search-cancel-button { @apply hidden; }
 
   [contenteditable][data-placeholder]:empty::before {
     content: attr(data-placeholder);
     color: hsl(var(--muted-foreground));
     pointer-events: none;
-  }
-
-  .no-default-hover-elevate {}
-  .no-default-active-elevate {}
-
-  .toggle-elevate::before,
-  .toggle-elevate-2::before {
-    content: "";
-    pointer-events: none;
-    position: absolute;
-    inset: 0px;
-    border-radius: inherit;
-    z-index: -1;
-  }
-
-  .toggle-elevate.toggle-elevated::before {
-    background-color: var(--elevate-2);
-  }
-
-  .border.toggle-elevate::before {
-    inset: -1px;
   }
 
   .hover-elevate:not(.no-default-hover-elevate),
@@ -262,11 +353,16 @@
   .active-elevate-2:active:not(.no-default-active-elevate)::after {
     background-color: var(--elevate-2);
   }
+}
 
-  .border.hover-elevate:not(.no-hover-interaction-elevate)::after,
-  .border.active-elevate:not(.no-active-interaction-elevate)::after,
-  .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
-  .border.active-elevate-2:not(.no-active-interaction-elevate)::after {
-    inset: -1px;
-  }
+/* ─── STEAMPUNK FONT FLAVOUR ────────────────────────────────────── */
+html[data-theme="steampunk"] {
+  --app-font-sans: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+  letter-spacing: 0.01em;
+}
+
+/* ─── UNICORN DECORATIVE ────────────────────────────────────────── */
+html[data-theme="unicorn"] body {
+  background-image: radial-gradient(ellipse at 10% 10%, hsl(328 85% 95% / 0.5) 0%, transparent 50%),
+                    radial-gradient(ellipse at 90% 90%, hsl(190 75% 92% / 0.4) 0%, transparent 50%);
 }

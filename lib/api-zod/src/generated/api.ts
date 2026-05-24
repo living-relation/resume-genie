@@ -134,7 +134,10 @@ export const ListApplicationsResponse = zod.array(ListApplicationsResponseItem)
  * @summary Generate a tailored resume and cover letter for a job
  */
 export const CreateApplicationBody = zod.object({
-  "jobId": zod.number()
+  "jobId": zod.number(),
+  "tone": zod.string().optional().describe('professional, casual, executive, creative, technical'),
+  "style": zod.string().optional().describe('standard, concise, detailed, storytelling'),
+  "truthfulness": zod.number().optional().describe('0=modest, 1=accurate, 2=slight_embellishment, 3=exaggeration, 4=stretch_the_truth')
 })
 
 

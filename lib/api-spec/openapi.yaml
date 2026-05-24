@@ -414,6 +414,15 @@ components:
       properties:
         jobId:
           type: integer
+        tone:
+          type: string
+          description: "professional, casual, executive, creative, technical"
+        style:
+          type: string
+          description: "standard, concise, detailed, storytelling"
+        truthfulness:
+          type: integer
+          description: "0=modest, 1=accurate, 2=slight_embellishment, 3=exaggeration, 4=stretch_the_truth"
       required:
         - jobId
 

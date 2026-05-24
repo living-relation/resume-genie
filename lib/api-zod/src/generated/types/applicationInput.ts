@@ -8,4 +8,10 @@
 
 export interface ApplicationInput {
   jobId: number;
+  /** professional, casual, executive, creative, technical */
+  tone?: string;
+  /** standard, concise, detailed, storytelling */
+  style?: string;
+  /** 0=modest, 1=accurate, 2=slight_embellishment, 3=exaggeration, 4=stretch_the_truth */
+  truthfulness?: number;
 }

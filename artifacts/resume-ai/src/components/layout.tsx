@@ -1,91 +1,338 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, FileText, Briefcase, FileCheck, Upload, PlusCircle } from "lucide-react";
+import {
+  LayoutDashboard, FileText, Briefcase, FileCheck,
+  Upload, PlusCircle, Settings, Sun, Moon, Cog, Sparkles,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile.tsx";
+import { usePreferences, type Theme, TONE_OPTIONS, STYLE_OPTIONS, TRUTHFULNESS_LEVELS } from "@/context/preferences";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/documents", label: "My Documents", icon: FileText },
-  { href: "/jobs", label: "Job Listings", icon: Briefcase },
+  { href: "/documents", label: "Documents", icon: FileText },
+  { href: "/jobs", label: "Jobs", icon: Briefcase },
   { href: "/applications", label: "Applications", icon: FileCheck },
 ];
 
-const actionItems = [
-  { href: "/upload", label: "Upload Document", icon: Upload },
-  { href: "/add-job", label: "Add Job", icon: PlusCircle },
+const themes: { value: Theme; label: string; icon: React.ElementType; preview: string }[] = [
+  { value: "light", label: "Light", icon: Sun, preview: "bg-slate-100 border-slate-300" },
+  { value: "dark", label: "Dark", icon: Moon, preview: "bg-slate-800 border-slate-600" },
+  { value: "steampunk", label: "Steampunk", icon: Cog, preview: "bg-amber-950 border-amber-700" },
+  { value: "unicorn", label: "Unicorn", icon: Sparkles, preview: "bg-purple-100 border-pink-400" },
 ];
 
-export function Layout({ children }: { children: React.ReactNode }) {
-  const [location] = useLocation();
+function SettingsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { theme, tone, style, truthfulness, setTheme, setTone, setStyle, setTruthfulness } = usePreferences();
+  const currentLevel = TRUTHFULNESS_LEVELS[truthfulness];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      {/* Sidebar */}
-      <aside className="w-60 flex-shrink-0 bg-sidebar flex flex-col border-r border-sidebar-border">
-        {/* Logo */}
-        <div className="px-5 py-5 border-b border-sidebar-border">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-md bg-sidebar-primary flex items-center justify-center flex-shrink-0">
-              <FileCheck className="w-4 h-4 text-sidebar-primary-foreground" />
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Settings className="w-4 h-4 text-primary" />
+            Appearance &amp; Generation Settings
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-7 pt-1">
+          {/* Theme */}
+          <div>
+            <p className="text-sm font-semibold text-foreground mb-3">Theme</p>
+            <div className="grid grid-cols-2 gap-2.5">
+              {themes.map(({ value, label, icon: Icon, preview }) => (
+                <button
+                  key={value}
+                  onClick={() => setTheme(value)}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg border-2 text-sm font-medium transition-all text-left",
+                    theme === value
+                      ? "border-primary bg-accent text-accent-foreground"
+                      : "border-border hover:border-primary/40 text-foreground"
+                  )}
+                  data-testid={`btn-theme-${value}`}
+                >
+                  <div className={cn("w-5 h-5 rounded-sm border flex-shrink-0", preview)} />
+                  <Icon className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground" />
+                  {label}
+                </button>
+              ))}
             </div>
-            <span className="text-sidebar-foreground font-semibold text-sm tracking-tight">Resume AI</span>
+          </div>
+
+          {/* Tone */}
+          <div>
+            <p className="text-sm font-semibold text-foreground mb-1">Writing Tone</p>
+            <p className="text-xs text-muted-foreground mb-3">Controls the voice and formality of generated content</p>
+            <div className="space-y-1.5">
+              {TONE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setTone(opt.value)}
+                  className={cn(
+                    "w-full flex items-center justify-between px-3 py-2 rounded-md border text-sm transition-all text-left",
+                    tone === opt.value
+                      ? "border-primary bg-accent text-accent-foreground"
+                      : "border-border hover:border-primary/30 text-foreground"
+                  )}
+                  data-testid={`btn-tone-${opt.value}`}
+                >
+                  <span className="font-medium">{opt.label}</span>
+                  <span className="text-xs text-muted-foreground">{opt.description}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Style */}
+          <div>
+            <p className="text-sm font-semibold text-foreground mb-1">Resume Style</p>
+            <p className="text-xs text-muted-foreground mb-3">Controls length and structure of the output</p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {STYLE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setStyle(opt.value)}
+                  className={cn(
+                    "flex flex-col px-3 py-2.5 rounded-md border text-left text-sm transition-all",
+                    style === opt.value
+                      ? "border-primary bg-accent text-accent-foreground"
+                      : "border-border hover:border-primary/30 text-foreground"
+                  )}
+                  data-testid={`btn-style-${opt.value}`}
+                >
+                  <span className="font-medium">{opt.label}</span>
+                  <span className="text-xs text-muted-foreground mt-0.5">{opt.description}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Truthfulness */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-sm font-semibold text-foreground">Truthfulness</p>
+              <Badge variant="outline" className={cn("text-xs border", currentLevel.color)}>
+                {currentLevel.label}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">{currentLevel.description}</p>
+            <Slider
+              min={0}
+              max={4}
+              step={1}
+              value={[truthfulness]}
+              onValueChange={([v]) => setTruthfulness(v as 0|1|2|3|4)}
+              className="mb-3"
+              data-testid="slider-truthfulness"
+            />
+            <div className="flex justify-between">
+              {TRUTHFULNESS_LEVELS.map((lvl, i) => (
+                <button
+                  key={i}
+                  onClick={() => setTruthfulness(i as 0|1|2|3|4)}
+                  className={cn(
+                    "text-xs transition-colors text-center w-12",
+                    truthfulness === i ? `font-semibold ${lvl.color}` : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {lvl.label}
+                </button>
+              ))}
+            </div>
+            {truthfulness >= 4 && (
+              <p className="mt-3 text-xs text-muted-foreground bg-muted/60 border border-border rounded-md px-3 py-2">
+                ⚠️ Maximized mode fabricates plausible numbers and impact. Degrees, certifications, and licenses are never fabricated.
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          <p className="px-2 pb-2 text-xs font-medium text-sidebar-foreground/40 uppercase tracking-widest">Workspace</p>
-          {navItems.map(({ href, label, icon: Icon }) => {
+        <div className="pt-2">
+          <Button className="w-full" onClick={onClose}>Done</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ─── DESKTOP SIDEBAR ────────────────────────────────────────────── */
+function DesktopSidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
+  const [location] = useLocation();
+  const { theme, tone, truthfulness } = usePreferences();
+
+  return (
+    <aside className="w-60 flex-shrink-0 bg-sidebar flex flex-col border-r border-sidebar-border">
+      <div className="px-5 py-5 border-b border-sidebar-border">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-md bg-sidebar-primary flex items-center justify-center flex-shrink-0">
+            <FileCheck className="w-4 h-4 text-sidebar-primary-foreground" />
+          </div>
+          <span className="text-sidebar-foreground font-semibold text-sm tracking-tight">Resume AI</span>
+        </div>
+      </div>
+
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        <p className="px-2 pb-2 text-xs font-medium text-sidebar-foreground/40 uppercase tracking-widest">Workspace</p>
+        {navItems.map(({ href, label, icon: Icon }) => {
+          const active = location === href;
+          return (
+            <Link key={href} href={href}>
+              <div className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer",
+                active
+                  ? "bg-sidebar-accent text-sidebar-foreground"
+                  : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/60"
+              )}>
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                {label}
+              </div>
+            </Link>
+          );
+        })}
+
+        <div className="pt-4">
+          <p className="px-2 pb-2 text-xs font-medium text-sidebar-foreground/40 uppercase tracking-widest">Add New</p>
+          {[
+            { href: "/upload", label: "Upload Document", icon: Upload },
+            { href: "/add-job", label: "Add Job", icon: PlusCircle },
+          ].map(({ href, label, icon: Icon }) => {
             const active = location === href;
             return (
               <Link key={href} href={href}>
-                <div
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer",
-                    active
-                      ? "bg-sidebar-accent text-sidebar-foreground"
-                      : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/60"
-                  )}
-                >
+                <div className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer",
+                  active
+                    ? "bg-sidebar-accent text-sidebar-foreground"
+                    : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/60"
+                )}>
                   <Icon className="w-4 h-4 flex-shrink-0" />
                   {label}
                 </div>
               </Link>
             );
           })}
-
-          <div className="pt-4">
-            <p className="px-2 pb-2 text-xs font-medium text-sidebar-foreground/40 uppercase tracking-widest">Add New</p>
-            {actionItems.map(({ href, label, icon: Icon }) => {
-              const active = location === href;
-              return (
-                <Link key={href} href={href}>
-                  <div
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer",
-                      active
-                        ? "bg-sidebar-primary/20 text-sidebar-primary-foreground"
-                        : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/60"
-                    )}
-                  >
-                    <Icon className="w-4 h-4 flex-shrink-0" />
-                    {label}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </nav>
-
-        {/* Footer */}
-        <div className="px-5 py-4 border-t border-sidebar-border">
-          <p className="text-xs text-sidebar-foreground/30">Powered by GPT</p>
         </div>
-      </aside>
+      </nav>
 
-      {/* Main content */}
+      {/* Active settings preview */}
+      <div className="px-3 pb-2">
+        <button
+          onClick={onOpenSettings}
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-sm"
+          data-testid="btn-open-settings"
+        >
+          <Settings className="w-4 h-4 flex-shrink-0" />
+          <div className="flex-1 text-left">
+            <span className="text-xs">Settings</span>
+            <div className="flex items-center gap-1 mt-0.5">
+              <span className="text-[10px] opacity-60 capitalize">{tone}</span>
+              <span className="text-[10px] opacity-40">·</span>
+              <span className="text-[10px] opacity-60">{TRUTHFULNESS_LEVELS[truthfulness].label}</span>
+            </div>
+          </div>
+        </button>
+      </div>
+      <div className="px-5 py-3 border-t border-sidebar-border">
+        <p className="text-xs text-sidebar-foreground/30">Powered by GPT · {theme.charAt(0).toUpperCase() + theme.slice(1)} theme</p>
+      </div>
+    </aside>
+  );
+}
+
+/* ─── MOBILE LAYOUT ──────────────────────────────────────────────── */
+function MobileLayout({ children, onOpenSettings }: { children: React.ReactNode; onOpenSettings: () => void }) {
+  const [location] = useLocation();
+
+  return (
+    <div className="flex flex-col h-screen overflow-hidden bg-background">
+      {/* Top header */}
+      <header className="flex-shrink-0 bg-sidebar border-b border-sidebar-border px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-6 h-6 rounded-md bg-sidebar-primary flex items-center justify-center flex-shrink-0">
+            <FileCheck className="w-3.5 h-3.5 text-sidebar-primary-foreground" />
+          </div>
+          <span className="text-sidebar-foreground font-semibold text-sm">Resume AI</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href="/upload">
+            <button className="w-8 h-8 flex items-center justify-center rounded-md text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors">
+              <Upload className="w-4 h-4" />
+            </button>
+          </Link>
+          <Link href="/add-job">
+            <button className="w-8 h-8 flex items-center justify-center rounded-md text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors">
+              <PlusCircle className="w-4 h-4" />
+            </button>
+          </Link>
+          <button
+            onClick={onOpenSettings}
+            className="w-8 h-8 flex items-center justify-center rounded-md text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+            data-testid="btn-open-settings-mobile"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
+        </div>
+      </header>
+
+      {/* Scrollable content */}
       <main className="flex-1 overflow-y-auto">
         {children}
       </main>
+
+      {/* Bottom tab bar */}
+      <nav className="flex-shrink-0 bg-sidebar border-t border-sidebar-border safe-area-inset-bottom">
+        <div className="flex items-stretch">
+          {navItems.map(({ href, label, icon: Icon }) => {
+            const active = location === href;
+            return (
+              <Link key={href} href={href} className="flex-1">
+                <div className={cn(
+                  "flex flex-col items-center justify-center py-2.5 gap-1 transition-colors",
+                  active
+                    ? "text-sidebar-primary"
+                    : "text-sidebar-foreground/50 hover:text-sidebar-foreground"
+                )}>
+                  <Icon className="w-5 h-5" />
+                  <span className="text-[10px] font-medium">{label}</span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    </div>
+  );
+}
+
+/* ─── MAIN LAYOUT ────────────────────────────────────────────────── */
+export function Layout({ children }: { children: React.ReactNode }) {
+  const isMobile = useIsMobile();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  if (isMobile) {
+    return (
+      <>
+        <MobileLayout onOpenSettings={() => setSettingsOpen(true)}>
+          {children}
+        </MobileLayout>
+        <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      </>
+    );
+  }
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-background">
+      <DesktopSidebar onOpenSettings={() => setSettingsOpen(true)} />
+      <main className="flex-1 overflow-y-auto">
+        {children}
+      </main>
+      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
 }
