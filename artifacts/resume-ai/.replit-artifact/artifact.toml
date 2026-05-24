@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Resume AI"
+version = "1.0.0"
+id = "artifacts/resume-ai"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18731
+
+[services.development]
+run = "pnpm --filter @workspace/resume-ai run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/resume-ai", "run", "build" ]
+publicDir = "artifacts/resume-ai/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18731"
+BASE_PATH = "/"
