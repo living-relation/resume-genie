@@ -51,9 +51,16 @@ export default function UploadDocument() {
     });
   };
 
+  const ACCEPTED_TYPES = [
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/msword",
+    "text/plain",
+  ];
+
   const handlePdfUpload = async (file: File) => {
-    if (file.type !== "application/pdf") {
-      toast({ title: "Please select a PDF file", variant: "destructive" });
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      toast({ title: "Please select a PDF, DOCX, or TXT file", variant: "destructive" });
       return;
     }
     setPdfLoading(true);
@@ -109,9 +116,9 @@ export default function UploadDocument() {
               <Linkedin className="w-4 h-4 text-[#0077b5]" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground">Import from LinkedIn PDF</p>
+              <p className="text-sm font-medium text-foreground">Import from file</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                On your LinkedIn profile → More → Save to PDF — then upload that file here.
+                Supports <strong>PDF</strong>, <strong>DOCX</strong>, and <strong>TXT</strong> — including LinkedIn's "Save to PDF" export.
               </p>
               {pdfFile ? (
                 <div className="flex items-center gap-2 mt-3">
@@ -145,7 +152,7 @@ export default function UploadDocument() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="application/pdf"
+            accept=".pdf,.docx,.doc,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
             className="hidden"
             onChange={e => { const f = e.target.files?.[0]; if (f) handlePdfUpload(f); }}
             data-testid="input-pdf-file"

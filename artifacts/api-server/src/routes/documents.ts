@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db, documentsTable } from "@workspace/db";
 import multer from "multer";
 import pdfParse from "pdf-parse";
+import mammoth from "mammoth";
 import {
   CreateDocumentBody,
   GetDocumentParams,
@@ -28,30 +29,56 @@ router.post("/documents", async (req, res): Promise<void> => {
   res.status(201).json(doc);
 });
 
+const ACCEPTED_MIMETYPES: Record<string, string> = {
+  "application/pdf": "pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+  "application/msword": "doc",
+  "text/plain": "txt",
+};
+
 router.post("/documents/extract-pdf", upload.single("file"), async (req, res): Promise<void> => {
   if (!req.file) {
     res.status(400).json({ error: "No file uploaded" });
     return;
   }
-  if (req.file.mimetype !== "application/pdf") {
-    res.status(400).json({ error: "File must be a PDF" });
+
+  const format = ACCEPTED_MIMETYPES[req.file.mimetype];
+  if (!format) {
+    res.status(400).json({ error: "Unsupported file type. Please upload a PDF, DOCX, or TXT file." });
     return;
   }
 
   try {
-    const result = await pdfParse(req.file.buffer);
-    const text = result.text.trim();
-    if (!text) {
-      res.status(400).json({ error: "Could not extract text from PDF — try copying and pasting instead" });
-      return;
+    let text = "";
+
+    if (format === "pdf") {
+      const result = await pdfParse(req.file.buffer);
+      text = result.text.trim();
+      if (!text) {
+        res.status(400).json({ error: "Could not extract text from PDF — try copying and pasting instead" });
+        return;
+      }
+    } else if (format === "docx" || format === "doc") {
+      const result = await mammoth.extractRawText({ buffer: req.file.buffer });
+      text = result.value.trim();
+      if (!text) {
+        res.status(400).json({ error: "Could not extract text from this Word document" });
+        return;
+      }
+    } else if (format === "txt") {
+      text = req.file.buffer.toString("utf-8").trim();
+      if (!text) {
+        res.status(400).json({ error: "The text file appears to be empty" });
+        return;
+      }
     }
 
-    const basename = req.file.originalname.replace(/\.pdf$/i, "").replace(/[-_]/g, " ");
-    const suggestedName = basename || "LinkedIn Profile";
+    const ext = new RegExp(`\\.(${format}|pdf|docx?|txt)$`, "i");
+    const suggestedName = req.file.originalname.replace(ext, "").replace(/[-_]/g, " ") || "My Resume";
 
     res.json({ text, suggestedName });
   } catch {
-    res.status(400).json({ error: "Failed to parse PDF — the file may be scanned or password-protected" });
+    res.status(400).json({ error: "Failed to parse file — try copying and pasting the text instead" });
   }
 });
 
