@@ -63,6 +63,36 @@ paths:
               schema:
                 $ref: "#/components/schemas/Document"
 
+  /documents/extract-pdf:
+    post:
+      operationId: extractPdf
+      tags: [documents]
+      summary: Extract text from a PDF file (e.g. LinkedIn export)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Extracted text and suggested name
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PdfExtractResult"
+        "400":
+          description: Invalid file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
   /documents/{id}:
     get:
       operationId: getDocument
@@ -445,3 +475,14 @@ components:
         - applicationCount
         - pendingJobs
         - completedApplications
+
+    PdfExtractResult:
+      type: object
+      properties:
+        text:
+          type: string
+        suggestedName:
+          type: string
+      required:
+        - text
+        - suggestedName

@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreateDocument, getListDocumentsQueryKey } from "@workspace/api-client-react";
@@ -11,8 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, ArrowLeft } from "lucide-react";
+import { Upload, ArrowLeft, FileText, Loader2, Linkedin, X } from "lucide-react";
 import { Link } from "wouter";
+import { cn } from "@/lib/utils";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -27,6 +29,9 @@ export default function UploadDocument() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const createDocument = useCreateDocument();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfFile, setPdfFile] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -46,18 +51,107 @@ export default function UploadDocument() {
     });
   };
 
+  const handlePdfUpload = async (file: File) => {
+    if (file.type !== "application/pdf") {
+      toast({ title: "Please select a PDF file", variant: "destructive" });
+      return;
+    }
+    setPdfLoading(true);
+    setPdfFile(file.name);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/documents/extract-pdf", { method: "POST", body: formData });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { error?: string }).error ?? "Failed to extract text");
+      }
+      const data = await res.json() as { text: string; suggestedName: string };
+      form.setValue("content", data.text, { shouldValidate: true });
+      if (!form.getValues("name")) {
+        form.setValue("name", data.suggestedName, { shouldValidate: true });
+      }
+      if (!form.getValues("type")) {
+        form.setValue("type", "resume", { shouldValidate: true });
+      }
+      toast({ title: "PDF imported — review and save below" });
+    } catch (err) {
+      toast({ title: err instanceof Error ? err.message : "Failed to parse PDF", variant: "destructive" });
+      setPdfFile(null);
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
+  const clearPdf = () => {
+    setPdfFile(null);
+    form.setValue("content", "");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   return (
-    <div className="p-8 max-w-2xl mx-auto">
-      <div className="mb-8">
+    <div className="p-4 sm:p-8 max-w-2xl mx-auto">
+      <div className="mb-6 sm:mb-8">
         <Link href="/documents">
           <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4" data-testid="btn-back">
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Documents
+            <ArrowLeft className="w-3.5 h-3.5" />Back to Documents
           </button>
         </Link>
         <h1 className="text-2xl font-bold text-foreground" data-testid="page-title">Upload Document</h1>
-        <p className="text-muted-foreground mt-1 text-sm">Paste the content of your resume, cover letter, or other career document.</p>
+        <p className="text-muted-foreground mt-1 text-sm">Add your resume, cover letter, or other career document.</p>
       </div>
+
+      {/* LinkedIn / PDF import banner */}
+      <Card className="border-border mb-5 bg-accent/30">
+        <CardContent className="pt-4 pb-4">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-[#0077b5]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Linkedin className="w-4 h-4 text-[#0077b5]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground">Import from LinkedIn PDF</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                On your LinkedIn profile → More → Save to PDF — then upload that file here.
+              </p>
+              {pdfFile ? (
+                <div className="flex items-center gap-2 mt-3">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-green-500/10 border border-green-500/20 text-xs text-green-700 dark:text-green-400">
+                    <FileText className="w-3 h-3" />{pdfFile}
+                  </div>
+                  <button onClick={clearPdf} className="text-muted-foreground hover:text-foreground transition-colors">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 mt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    disabled={pdfLoading}
+                    onClick={() => fileInputRef.current?.click()}
+                    data-testid="btn-import-pdf"
+                  >
+                    {pdfLoading
+                      ? <><Loader2 className="w-3 h-3 mr-1.5 animate-spin" />Extracting...</>
+                      : <><FileText className="w-3 h-3 mr-1.5" />Upload PDF</>
+                    }
+                  </Button>
+                  <span className="text-xs text-muted-foreground">or paste text below</span>
+                </div>
+              )}
+            </div>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={e => { const f = e.target.files?.[0]; if (f) handlePdfUpload(f); }}
+            data-testid="input-pdf-file"
+          />
+        </CardContent>
+      </Card>
 
       <Card className="border-border">
         <CardHeader className="pb-4">
@@ -89,7 +183,7 @@ export default function UploadDocument() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Document Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-doc-type">
                           <SelectValue placeholder="Select type..." />
@@ -115,8 +209,8 @@ export default function UploadDocument() {
                     <FormLabel>Content</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Paste the full text content of your document here..."
-                        className="min-h-64 font-mono text-xs resize-y"
+                        placeholder="Paste your document text here, or use the PDF import above..."
+                        className={cn("min-h-64 font-mono text-xs resize-y", pdfFile && "border-green-500/40 bg-green-500/5")}
                         {...field}
                         data-testid="textarea-doc-content"
                       />
@@ -133,7 +227,7 @@ export default function UploadDocument() {
                   className="flex-1"
                   data-testid="btn-submit-upload"
                 >
-                  {createDocument.isPending ? "Uploading..." : "Upload Document"}
+                  {createDocument.isPending ? "Saving..." : "Save Document"}
                 </Button>
                 <Link href="/documents">
                   <Button type="button" variant="outline" data-testid="btn-cancel">Cancel</Button>
@@ -143,12 +237,6 @@ export default function UploadDocument() {
           </Form>
         </CardContent>
       </Card>
-
-      <div className="mt-4 p-4 rounded-lg bg-muted/50 border border-border">
-        <p className="text-xs text-muted-foreground">
-          <strong className="text-foreground">Tip:</strong> Copy and paste the plain text from your existing resume or cover letter. The more complete and detailed your documents, the better the AI can tailor your applications.
-        </p>
-      </div>
     </div>
   );
 }

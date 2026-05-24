@@ -1,2 +1,11 @@
 export * from "./generated/api";
-export * from "./generated/types";
+export type { ApiError } from "./generated/types/apiError";
+export type { Application } from "./generated/types/application";
+export type { ApplicationInput } from "./generated/types/applicationInput";
+export type { Document } from "./generated/types/document";
+export type { DocumentInput } from "./generated/types/documentInput";
+export type { HealthStatus } from "./generated/types/healthStatus";
+export type { Job } from "./generated/types/job";
+export type { JobInput } from "./generated/types/jobInput";
+export type { PdfExtractResult } from "./generated/types/pdfExtractResult";
+export type { Stats } from "./generated/types/stats";

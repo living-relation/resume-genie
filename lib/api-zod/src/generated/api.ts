@@ -40,6 +40,19 @@ export const CreateDocumentBody = zod.object({
 
 
 /**
+ * @summary Extract text from a PDF file (e.g. LinkedIn export)
+ */
+export const ExtractPdfBody = zod.object({
+  "file": zod.instanceof(File)
+})
+
+export const ExtractPdfResponse = zod.object({
+  "text": zod.string(),
+  "suggestedName": zod.string()
+})
+
+
+/**
  * @summary Get a document
  */
 export const GetDocumentParams = zod.object({

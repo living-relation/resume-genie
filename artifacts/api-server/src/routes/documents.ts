@@ -1,6 +1,8 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, documentsTable } from "@workspace/db";
+import multer from "multer";
+import pdfParse from "pdf-parse";
 import {
   CreateDocumentBody,
   GetDocumentParams,
@@ -8,6 +10,7 @@ import {
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 router.get("/documents", async (req, res): Promise<void> => {
   const docs = await db.select().from(documentsTable).orderBy(documentsTable.createdAt);
@@ -23,6 +26,33 @@ router.post("/documents", async (req, res): Promise<void> => {
 
   const [doc] = await db.insert(documentsTable).values(parsed.data).returning();
   res.status(201).json(doc);
+});
+
+router.post("/documents/extract-pdf", upload.single("file"), async (req, res): Promise<void> => {
+  if (!req.file) {
+    res.status(400).json({ error: "No file uploaded" });
+    return;
+  }
+  if (req.file.mimetype !== "application/pdf") {
+    res.status(400).json({ error: "File must be a PDF" });
+    return;
+  }
+
+  try {
+    const result = await pdfParse(req.file.buffer);
+    const text = result.text.trim();
+    if (!text) {
+      res.status(400).json({ error: "Could not extract text from PDF — try copying and pasting instead" });
+      return;
+    }
+
+    const basename = req.file.originalname.replace(/\.pdf$/i, "").replace(/[-_]/g, " ");
+    const suggestedName = basename || "LinkedIn Profile";
+
+    res.json({ text, suggestedName });
+  } catch {
+    res.status(400).json({ error: "Failed to parse PDF — the file may be scanned or password-protected" });
+  }
 });
 
 router.get("/documents/:id", async (req, res): Promise<void> => {

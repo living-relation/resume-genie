@@ -25,9 +25,11 @@ import type {
   ApplicationInput,
   Document,
   DocumentInput,
+  ExtractPdfBody,
   HealthStatus,
   Job,
   JobInput,
+  PdfExtractResult,
   Stats
 } from './api.schemas';
 
@@ -266,6 +268,79 @@ export const useCreateDocument = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateDocumentMutationOptions(options));
+    }
+
+export const getExtractPdfUrl = () => {
+
+
+
+
+  return `/api/documents/extract-pdf`
+}
+
+/**
+ * @summary Extract text from a PDF file (e.g. LinkedIn export)
+ */
+export const extractPdf = async (extractPdfBody: ExtractPdfBody, options?: RequestInit): Promise<PdfExtractResult> => {
+    const formData = new FormData();
+formData.append(`file`, extractPdfBody.file);
+
+  return customFetch<PdfExtractResult>(getExtractPdfUrl(),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body:
+      formData,
+  }
+);}
+
+
+
+
+export const getExtractPdfMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof extractPdf>>, TError,{data: BodyType<ExtractPdfBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof extractPdf>>, TError,{data: BodyType<ExtractPdfBody>}, TContext> => {
+
+const mutationKey = ['extractPdf'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof extractPdf>>, {data: BodyType<ExtractPdfBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  extractPdf(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ExtractPdfMutationResult = NonNullable<Awaited<ReturnType<typeof extractPdf>>>
+    export type ExtractPdfMutationBody = BodyType<ExtractPdfBody>
+    export type ExtractPdfMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Extract text from a PDF file (e.g. LinkedIn export)
+ */
+export const useExtractPdf = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof extractPdf>>, TError,{data: BodyType<ExtractPdfBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof extractPdf>>,
+        TError,
+        {data: BodyType<ExtractPdfBody>},
+        TContext
+      > => {
+      return useMutation(getExtractPdfMutationOptions(options));
     }
 
 export const getGetDocumentUrl = (id: number,) => {

@@ -83,3 +83,12 @@ export interface Stats {
   completedApplications: number;
 }
 
+export interface PdfExtractResult {
+  text: string;
+  suggestedName: string;
+}
+
+export type ExtractPdfBody = {
+  file: Blob;
+};
+
