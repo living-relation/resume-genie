@@ -117,8 +117,9 @@ export default function UploadDocument() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground">Import from file</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Supports <strong>PDF</strong>, <strong>DOCX</strong>, and <strong>TXT</strong> — including LinkedIn's "Save to PDF" export.
+              <p className="text-sm text-foreground mt-1">
+                Accepts <strong className="text-primary">PDF</strong>, <strong className="text-primary">DOCX</strong>, and <strong className="text-primary">TXT</strong>
+                <span className="text-muted-foreground"> — including LinkedIn's "Save to PDF" export.</span>
               </p>
               {pdfFile ? (
                 <div className="flex items-center gap-2 mt-3">
@@ -141,7 +142,7 @@ export default function UploadDocument() {
                   >
                     {pdfLoading
                       ? <><Loader2 className="w-3 h-3 mr-1.5 animate-spin" />Extracting...</>
-                      : <><FileText className="w-3 h-3 mr-1.5" />Upload PDF</>
+                      : <><FileText className="w-3 h-3 mr-1.5" />Upload</>
                     }
                   </Button>
                   <span className="text-xs text-muted-foreground">or paste text below</span>

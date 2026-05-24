@@ -11,6 +11,76 @@ import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
+function stripHtml(html: string): string {
+  return cheerio.load(`<div>${html}</div>`)("div").text().replace(/\s+/g, " ").trim();
+}
+
+function extractJsonLdJobPosting(html: string): {
+  title: string | null;
+  company: string | null;
+  location: string | null;
+  description: string | null;
+} | null {
+  const $ = cheerio.load(html);
+  const scripts = $('script[type="application/ld+json"]').toArray();
+
+  for (const script of scripts) {
+    const raw = $(script).contents().text();
+    if (!raw.trim()) continue;
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      continue;
+    }
+
+    const candidates: unknown[] = Array.isArray(parsed)
+      ? parsed
+      : parsed && typeof parsed === "object" && "@graph" in parsed && Array.isArray((parsed as { "@graph": unknown[] })["@graph"])
+        ? (parsed as { "@graph": unknown[] })["@graph"]
+        : [parsed];
+
+    for (const node of candidates) {
+      if (!node || typeof node !== "object") continue;
+      const obj = node as Record<string, unknown>;
+      const type = obj["@type"];
+      const isJobPosting = type === "JobPosting" || (Array.isArray(type) && type.includes("JobPosting"));
+      if (!isJobPosting) continue;
+
+      const title = typeof obj.title === "string" ? obj.title.trim() : null;
+
+      let company: string | null = null;
+      const org = obj.hiringOrganization;
+      if (typeof org === "string") company = org;
+      else if (org && typeof org === "object" && typeof (org as Record<string, unknown>).name === "string") {
+        company = (org as Record<string, string>).name;
+      }
+
+      let location: string | null = null;
+      const loc = obj.jobLocation;
+      const firstLoc = Array.isArray(loc) ? loc[0] : loc;
+      if (firstLoc && typeof firstLoc === "object") {
+        const addr = (firstLoc as Record<string, unknown>).address;
+        if (typeof addr === "string") location = addr;
+        else if (addr && typeof addr === "object") {
+          const a = addr as Record<string, unknown>;
+          const parts = [a.addressLocality, a.addressRegion, a.addressCountry].filter(p => typeof p === "string");
+          location = parts.length ? parts.join(", ") : null;
+        }
+      }
+
+      const descRaw = typeof obj.description === "string" ? obj.description : null;
+      const description = descRaw ? stripHtml(descRaw) : null;
+
+      if (title || description) {
+        return { title, company, location, description };
+      }
+    }
+  }
+  return null;
+}
+
 async function scrapeJobListing(url: string): Promise<{
   title: string | null;
   company: string | null;
@@ -18,14 +88,30 @@ async function scrapeJobListing(url: string): Promise<{
   description: string | null;
 }> {
   try {
+    const host = (() => { try { return new URL(url).host; } catch { return ""; } })();
+    const isIndeed = /(?:^|\.)indeed\./i.test(host);
+
     const res = await fetch(url, {
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+        "Sec-Ch-Ua": '"Chromium";v="122", "Google Chrome";v="122", "Not-A.Brand";v="99"',
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": '"macOS"',
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Upgrade-Insecure-Requests": "1",
+        ...(isIndeed ? { Referer: "https://www.google.com/" } : {}),
       },
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(20000),
+      redirect: "follow",
     });
 
     if (!res.ok) {
@@ -33,31 +119,41 @@ async function scrapeJobListing(url: string): Promise<{
     }
 
     const html = await res.text();
-    const $ = cheerio.load(html);
 
-    // Remove noise
+    // First, try structured data (JSON-LD JobPosting). This is the most reliable
+    // method and works on Indeed, LinkedIn (public), Glassdoor, Greenhouse, Lever,
+    // Workday, and most company career pages.
+    const jsonLd = extractJsonLdJobPosting(html);
+    if (jsonLd && (jsonLd.title || jsonLd.description)) {
+      return {
+        title: jsonLd.title ? jsonLd.title.slice(0, 255) : null,
+        company: jsonLd.company ? jsonLd.company.slice(0, 255) : null,
+        location: jsonLd.location ? jsonLd.location.slice(0, 255) : null,
+        description: jsonLd.description ? jsonLd.description.slice(0, 8000) : null,
+      };
+    }
+
+    // Fallback: parse HTML directly
+    const $ = cheerio.load(html);
     $("script, style, nav, footer, header, iframe, noscript").remove();
 
-    // Try to extract title
     const title =
       $('meta[property="og:title"]').attr("content") ||
       $("h1").first().text().trim() ||
       $("title").text().trim() ||
       null;
 
-    // Try to extract company name from common patterns
     const company =
       $('[itemprop="hiringOrganization"] [itemprop="name"]').first().text().trim() ||
+      $('meta[property="og:site_name"]').attr("content") ||
       $(".company-name, .employer-name, [data-company], [class*=\"company\"]").first().text().trim() ||
       null;
 
-    // Try to extract location
     const location =
       $('[itemprop="jobLocation"]').first().text().trim() ||
       $(".location, [class*=\"location\"]").first().text().trim() ||
       null;
 
-    // Extract main text content for description
     const bodyText = $("body").text().replace(/\s+/g, " ").trim();
     const description = bodyText.slice(0, 8000) || null;
 
