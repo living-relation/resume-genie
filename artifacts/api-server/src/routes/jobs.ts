@@ -81,12 +81,47 @@ function extractJsonLdJobPosting(html: string): {
   return null;
 }
 
-async function scrapeJobListing(url: string): Promise<{
+function normalizeJobUrl(rawUrl: string): string {
+  let u: URL;
+  try {
+    u = new URL(rawUrl);
+  } catch {
+    return rawUrl;
+  }
+
+  const host = u.host.toLowerCase();
+
+  // Indeed: mobile redirects often land on the homepage with `vjk=<jobkey>` in
+  // the query string (e.g. `indeed.com/?vjk=abc&from=mobRdr`). Rewrite to the
+  // canonical viewjob URL so we hit the real job page, not the homepage.
+  if (/(?:^|\.)indeed\./i.test(host)) {
+    const jk = u.searchParams.get("vjk") || u.searchParams.get("jk");
+    if (jk) {
+      return `https://www.indeed.com/viewjob?jk=${encodeURIComponent(jk)}`;
+    }
+    // Mobile host → desktop host
+    if (host.startsWith("m.")) {
+      u.host = u.host.replace(/^m\./, "www.");
+      return u.toString();
+    }
+  }
+
+  // Generic mobile-host normalization for other major job boards.
+  if (/^m\.(linkedin|glassdoor|monster|ziprecruiter|simplyhired)\./i.test(host)) {
+    u.host = u.host.replace(/^m\./, "www.");
+    return u.toString();
+  }
+
+  return u.toString();
+}
+
+async function scrapeJobListing(rawUrl: string): Promise<{
   title: string | null;
   company: string | null;
   location: string | null;
   description: string | null;
 }> {
+  const url = normalizeJobUrl(rawUrl);
   try {
     const host = (() => { try { return new URL(url).host; } catch { return ""; } })();
     const isIndeed = /(?:^|\.)indeed\./i.test(host);
