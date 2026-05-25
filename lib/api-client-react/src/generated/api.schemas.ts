@@ -45,8 +45,31 @@ export interface Job {
   createdAt: string;
 }
 
+/**
+ * Provide a url to scrape, or manually paste description (and optionally title/company/location), or both.
+ */
 export interface JobInput {
-  url: string;
+  /** @nullable */
+  url?: string | null;
+  /** @nullable */
+  title?: string | null;
+  /** @nullable */
+  company?: string | null;
+  /** @nullable */
+  location?: string | null;
+  /** @nullable */
+  description?: string | null;
+}
+
+export interface JobUpdate {
+  /** @nullable */
+  title?: string | null;
+  /** @nullable */
+  company?: string | null;
+  /** @nullable */
+  location?: string | null;
+  /** @nullable */
+  description?: string | null;
 }
 
 export interface Application {

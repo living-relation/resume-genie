@@ -15,5 +15,6 @@ export * from './extractPdfBody';
 export * from './healthStatus';
 export * from './job';
 export * from './jobInput';
+export * from './jobUpdate';
 export * from './pdfExtractResult';
 export * from './stats';

@@ -1,10 +1,12 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db, jobsTable } from "@workspace/db";
 import {
   CreateJobBody,
   GetJobParams,
   DeleteJobParams,
+  UpdateJobParams,
+  UpdateJobBody,
 } from "@workspace/api-zod";
 import * as cheerio from "cheerio";
 import { logger } from "../lib/logger";
@@ -216,40 +218,112 @@ router.post("/jobs", async (req, res): Promise<void> => {
     return;
   }
 
-  const { url } = parsed.data;
+  const url = parsed.data.url?.trim() || null;
+  const manualTitle = parsed.data.title?.trim() || null;
+  const manualCompany = parsed.data.company?.trim() || null;
+  const manualLocation = parsed.data.location?.trim() || null;
+  const manualDescription = parsed.data.description?.trim() || null;
 
-  // Validate URL
-  try {
-    new URL(url);
-  } catch {
-    res.status(400).json({ error: "Invalid URL" });
+  if (!url && !manualDescription) {
+    res.status(400).json({ error: "Provide a URL or paste a job description" });
     return;
   }
 
-  // Create job with pending status
+  if (url) {
+    try {
+      new URL(url);
+    } catch {
+      res.status(400).json({ error: "Invalid URL" });
+      return;
+    }
+  }
+
+  // If the user pasted a description, treat as immediately scraped; otherwise pending.
+  const initialStatus = manualDescription ? "scraped" : "pending";
+
   const [job] = await db
     .insert(jobsTable)
-    .values({ url, status: "pending" })
+    .values({
+      url: url ?? "",
+      title: manualTitle,
+      company: manualCompany,
+      location: manualLocation,
+      description: manualDescription,
+      status: initialStatus,
+    })
     .returning();
 
   res.status(201).json(job);
 
-  // Scrape asynchronously after response
-  scrapeJobListing(url).then(async ({ title, company, location, description }) => {
-    await db
-      .update(jobsTable)
-      .set({
-        title,
-        company,
-        location,
-        description,
-        status: title || description ? "scraped" : "failed",
-      })
-      .where(eq(jobsTable.id, job.id));
-  }).catch((err) => {
-    logger.error({ err, jobId: job.id }, "Failed to update job after scraping");
-    db.update(jobsTable).set({ status: "failed" }).where(eq(jobsTable.id, job.id)).catch(() => {});
-  });
+  // Only scrape when a URL was provided AND the user didn't already supply text.
+  if (url && !manualDescription) {
+    scrapeJobListing(url).then(async ({ title, company, location, description }) => {
+      // Guard against overwriting manual edits: only apply scrape results if the
+      // job is still in "pending" state. If the user edited it in the meantime
+      // (status becomes "scraped" or "failed"), respect that.
+      await db
+        .update(jobsTable)
+        .set({
+          title: manualTitle ?? title,
+          company: manualCompany ?? company,
+          location: manualLocation ?? location,
+          description: description,
+          status: title || description ? "scraped" : "failed",
+        })
+        .where(and(eq(jobsTable.id, job.id), eq(jobsTable.status, "pending")));
+    }).catch((err) => {
+      logger.error({ err, jobId: job.id }, "Failed to update job after scraping");
+      db.update(jobsTable)
+        .set({ status: "failed" })
+        .where(and(eq(jobsTable.id, job.id), eq(jobsTable.status, "pending")))
+        .catch(() => {});
+    });
+  }
+});
+
+router.patch("/jobs/:id", async (req, res): Promise<void> => {
+  const params = UpdateJobParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const body = UpdateJobBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+
+  const [existing] = await db.select().from(jobsTable).where(eq(jobsTable.id, params.data.id));
+  if (!existing) {
+    res.status(404).json({ error: "Job not found" });
+    return;
+  }
+
+  const next = {
+    title: body.data.title !== undefined ? (body.data.title?.trim() || null) : existing.title,
+    company: body.data.company !== undefined ? (body.data.company?.trim() || null) : existing.company,
+    location: body.data.location !== undefined ? (body.data.location?.trim() || null) : existing.location,
+    description: body.data.description !== undefined ? (body.data.description?.trim() || null) : existing.description,
+  };
+
+  // Only recompute status when the user actually edited title or description
+  // in this PATCH. Otherwise preserve the existing status (don't flip pending
+  // jobs to failed on a no-op or location-only edit).
+  const touchedContent =
+    body.data.title !== undefined || body.data.description !== undefined;
+  const status = touchedContent
+    ? next.title || next.description
+      ? "scraped"
+      : "failed"
+    : existing.status;
+
+  const [updated] = await db
+    .update(jobsTable)
+    .set({ ...next, status })
+    .where(eq(jobsTable.id, params.data.id))
+    .returning();
+
+  res.json(updated);
 });
 
 router.get("/jobs/:id", async (req, res): Promise<void> => {

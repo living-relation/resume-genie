@@ -6,12 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-/**
- * Provide a url to scrape, or manually paste description (and optionally title/company/location), or both.
- */
-export interface JobInput {
-  /** @nullable */
-  url?: string | null;
+export interface JobUpdate {
   /** @nullable */
   title?: string | null;
   /** @nullable */

@@ -7,5 +7,6 @@ export type { DocumentInput } from "./generated/types/documentInput";
 export type { HealthStatus } from "./generated/types/healthStatus";
 export type { Job } from "./generated/types/job";
 export type { JobInput } from "./generated/types/jobInput";
+export type { JobUpdate } from "./generated/types/jobUpdate";
 export type { PdfExtractResult } from "./generated/types/pdfExtractResult";
 export type { Stats } from "./generated/types/stats";

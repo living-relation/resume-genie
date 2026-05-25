@@ -96,8 +96,12 @@ export const ListJobsResponse = zod.array(ListJobsResponseItem)
  * @summary Add a job listing by URL
  */
 export const CreateJobBody = zod.object({
-  "url": zod.string()
-})
+  "url": zod.string().nullish(),
+  "title": zod.string().nullish(),
+  "company": zod.string().nullish(),
+  "location": zod.string().nullish(),
+  "description": zod.string().nullish()
+}).describe('Provide a url to scrape, or manually paste description (and optionally title\/company\/location), or both.')
 
 
 /**
@@ -108,6 +112,32 @@ export const GetJobParams = zod.object({
 })
 
 export const GetJobResponse = zod.object({
+  "id": zod.number(),
+  "url": zod.string(),
+  "title": zod.string().nullable(),
+  "company": zod.string().nullable(),
+  "location": zod.string().nullable(),
+  "description": zod.string().nullable(),
+  "status": zod.string().describe('pending, scraped, failed'),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a job listing (e.g. manually edit a failed scrape)
+ */
+export const UpdateJobParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateJobBody = zod.object({
+  "title": zod.string().nullish(),
+  "company": zod.string().nullish(),
+  "location": zod.string().nullish(),
+  "description": zod.string().nullish()
+})
+
+export const UpdateJobResponse = zod.object({
   "id": zod.number(),
   "url": zod.string(),
   "title": zod.string().nullable(),

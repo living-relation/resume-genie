@@ -199,6 +199,35 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+    patch:
+      operationId: updateJob
+      tags: [jobs]
+      summary: Update a job listing (e.g. manually edit a failed scrape)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobUpdate"
+      responses:
+        "200":
+          description: Updated job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
     delete:
       operationId: deleteJob
       tags: [jobs]
@@ -402,11 +431,30 @@ components:
 
     JobInput:
       type: object
+      description: "Provide a url to scrape, or manually paste description (and optionally title/company/location), or both."
       properties:
         url:
-          type: string
-      required:
-        - url
+          type: ["string", "null"]
+        title:
+          type: ["string", "null"]
+        company:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+
+    JobUpdate:
+      type: object
+      properties:
+        title:
+          type: ["string", "null"]
+        company:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
 
     Application:
       type: object
