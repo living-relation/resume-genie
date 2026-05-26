@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
   LayoutDashboard, FileText, Briefcase, FileCheck,
-  Upload, PlusCircle, Settings, Sun, Moon, Cog, Sparkles,
+  Upload, PlusCircle, Settings, Sun, Moon, Cog, Sparkles, User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile.tsx";
@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -27,11 +29,17 @@ const themes: { value: Theme; label: string; icon: React.ElementType; preview: s
 ];
 
 function SettingsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { theme, tone, style, truthfulness, setTheme, setTone, setStyle, setTruthfulness } = usePreferences();
+  const { theme, tone, style, truthfulness, profile, setTheme, setTone, setStyle, setTruthfulness, setProfile } = usePreferences();
   const currentLevel = TRUTHFULNESS_LEVELS[truthfulness];
 
+  const [localProfile, setLocalProfile] = useState(profile);
+
+  const handleProfileSave = () => {
+    setProfile(localProfile);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { handleProfileSave(); onClose(); } }}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -41,6 +49,77 @@ function SettingsDialog({ open, onClose }: { open: boolean; onClose: () => void 
         </DialogHeader>
 
         <div className="space-y-7 pt-1">
+
+          {/* Profile */}
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <User className="w-3.5 h-3.5 text-primary" />
+              <p className="text-sm font-semibold text-foreground">Your Profile</p>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">Used to autofill contact info in Word exports. LinkedIn is optional and omitted if blank.</p>
+            <div className="space-y-2.5">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor="profile-name" className="text-xs">Full Name</Label>
+                  <Input
+                    id="profile-name"
+                    placeholder="Jane Smith"
+                    value={localProfile.name}
+                    onChange={e => setLocalProfile(p => ({ ...p, name: e.target.value }))}
+                    className="h-8 text-sm"
+                    data-testid="input-profile-name"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="profile-email" className="text-xs">Email</Label>
+                  <Input
+                    id="profile-email"
+                    placeholder="jane@email.com"
+                    value={localProfile.email}
+                    onChange={e => setLocalProfile(p => ({ ...p, email: e.target.value }))}
+                    className="h-8 text-sm"
+                    data-testid="input-profile-email"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor="profile-phone" className="text-xs">Phone</Label>
+                  <Input
+                    id="profile-phone"
+                    placeholder="(555) 123-4567"
+                    value={localProfile.phone}
+                    onChange={e => setLocalProfile(p => ({ ...p, phone: e.target.value }))}
+                    className="h-8 text-sm"
+                    data-testid="input-profile-phone"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="profile-location" className="text-xs">Location</Label>
+                  <Input
+                    id="profile-location"
+                    placeholder="Austin, TX"
+                    value={localProfile.location}
+                    onChange={e => setLocalProfile(p => ({ ...p, location: e.target.value }))}
+                    className="h-8 text-sm"
+                    data-testid="input-profile-location"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="profile-linkedin" className="text-xs">LinkedIn URL <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <Input
+                  id="profile-linkedin"
+                  placeholder="linkedin.com/in/janesmith"
+                  value={localProfile.linkedin}
+                  onChange={e => setLocalProfile(p => ({ ...p, linkedin: e.target.value }))}
+                  className="h-8 text-sm"
+                  data-testid="input-profile-linkedin"
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Theme */}
           <div>
             <p className="text-sm font-semibold text-foreground mb-3">Theme</p>
@@ -154,7 +233,7 @@ function SettingsDialog({ open, onClose }: { open: boolean; onClose: () => void 
         </div>
 
         <div className="pt-2">
-          <Button className="w-full" onClick={onClose}>Done</Button>
+          <Button className="w-full" onClick={() => { handleProfileSave(); onClose(); }}>Done</Button>
         </div>
       </DialogContent>
     </Dialog>

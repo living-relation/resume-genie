@@ -12,12 +12,20 @@ import {
 import {
   FileCheck, Trash2, Wand2, CheckCircle, Clock, XCircle,
   RefreshCw, ChevronLeft, Copy, Download, Settings,
-  Zap, Square, CheckSquare, Loader2, Briefcase,
+  Zap, Square, CheckSquare, Loader2, Briefcase, FileDown,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { usePreferences, TRUTHFULNESS_LEVELS, TONE_OPTIONS, STYLE_OPTIONS } from "@/context/preferences";
 import { cn } from "@/lib/utils";
@@ -28,10 +36,21 @@ const statusConfig = {
   failed:     { label: "Failed",        icon: XCircle,     className: "bg-destructive/10 text-destructive border-destructive/20" },
 };
 
+type ExportLayout = "classic" | "modern" | "minimal";
+
+const LAYOUTS: { value: ExportLayout; label: string; description: string }[] = [
+  { value: "classic", label: "Classic", description: "Traditional serif, centered header, ruled sections" },
+  { value: "modern",  label: "Modern",  description: "Blue accents, Calibri, bold section bars" },
+  { value: "minimal", label: "Minimal", description: "Georgia serif, generous whitespace, subtle headers" },
+];
+
 /* ─── APPLICATION DETAIL ─────────────────────────────────────────── */
 function ApplicationDetail({ id, onBack }: { id: number; onBack: () => void }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { profile } = usePreferences();
+  const [exportingDoc, setExportingDoc] = useState<string | null>(null);
+
   const { data: app, isLoading, refetch } = useGetApplication(id, {
     query: { queryKey: getGetApplicationQueryKey(id) },
   });
@@ -45,6 +64,35 @@ function ApplicationDetail({ id, onBack }: { id: number; onBack: () => void }) {
     const a = document.createElement("a");
     a.href = url; a.download = filename; a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const exportDocx = async (docType: "resume" | "cover_letter", layout: ExportLayout) => {
+    const key = `${docType}-${layout}`;
+    setExportingDoc(key);
+    try {
+      const res = await fetch(`/api/applications/${id}/export`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ layout, docType, profile }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Export failed" }));
+        throw new Error(err.error ?? "Export failed");
+      }
+      const blob = await res.blob();
+      const disposition = res.headers.get("Content-Disposition") ?? "";
+      const match = disposition.match(/filename="([^"]+)"/);
+      const filename = match?.[1] ?? `${docType}-${layout}.docx`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: `Downloaded ${filename}` });
+    } catch (err) {
+      toast({ title: err instanceof Error ? err.message : "Export failed", variant: "destructive" });
+    } finally {
+      setExportingDoc(null);
+    }
   };
 
   if (isLoading) {
@@ -62,6 +110,7 @@ function ApplicationDetail({ id, onBack }: { id: number; onBack: () => void }) {
 
   const status = statusConfig[app.status as keyof typeof statusConfig] ?? statusConfig.generating;
   const StatusIcon = status.icon;
+  const safeJobTitle = (app.jobCompany ?? app.jobTitle ?? "job").replace(/[^a-zA-Z0-9\s]/g, "").trim();
 
   return (
     <div className="p-4 sm:p-8 max-w-6xl mx-auto">
@@ -103,16 +152,53 @@ function ApplicationDetail({ id, onBack }: { id: number; onBack: () => void }) {
 
       {app.status === "done" && app.resume && app.coverLetter && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {[
-            { label: "Resume",       content: app.resume,       filename: `resume-${app.jobCompany ?? "job"}.txt`,       testId: "resume" },
-            { label: "Cover Letter", content: app.coverLetter,  filename: `cover-letter-${app.jobCompany ?? "job"}.txt`, testId: "cover"  },
-          ].map(({ label, content, filename, testId }) => (
+          {([
+            { label: "Resume",       content: app.resume,      txtFile: `resume-${safeJobTitle}.txt`,       docType: "resume" as const,       testId: "resume" },
+            { label: "Cover Letter", content: app.coverLetter, txtFile: `cover-letter-${safeJobTitle}.txt`, docType: "cover_letter" as const,  testId: "cover"  },
+          ] as const).map(({ label, content, txtFile, docType, testId }) => (
             <div key={testId} className="flex flex-col">
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                 <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{label}</h2>
                 <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => copyToClipboard(content, label)} data-testid={`btn-copy-${testId}`}><Copy className="w-3 h-3 mr-1" />Copy</Button>
-                  <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => downloadText(content, filename)} data-testid={`btn-download-${testId}`}><Download className="w-3 h-3 mr-1" />Download</Button>
+                  <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => copyToClipboard(content, label)} data-testid={`btn-copy-${testId}`}>
+                    <Copy className="w-3 h-3 mr-1" />Copy
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => downloadText(content, txtFile)} data-testid={`btn-download-${testId}`}>
+                    <Download className="w-3 h-3 mr-1" />.txt
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        disabled={exportingDoc !== null}
+                        data-testid={`btn-export-docx-${testId}`}
+                      >
+                        {exportingDoc?.startsWith(docType) ? (
+                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                        ) : (
+                          <FileDown className="w-3 h-3 mr-1" />
+                        )}
+                        .docx
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuLabel className="text-xs font-semibold">Choose Layout</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {LAYOUTS.map(({ value, label: layoutLabel, description }) => (
+                        <DropdownMenuItem
+                          key={value}
+                          onClick={() => exportDocx(docType, value)}
+                          className="flex flex-col items-start gap-0.5 cursor-pointer"
+                          data-testid={`btn-export-${testId}-${value}`}
+                        >
+                          <span className="font-medium text-sm">{layoutLabel}</span>
+                          <span className="text-xs text-muted-foreground">{description}</span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
               <div className="flex-1 rounded-lg border border-border bg-card overflow-auto max-h-[580px]">
@@ -272,7 +358,6 @@ function BatchGeneratePanel({ onSuccess }: { onSuccess: () => void }) {
           </p>
         ) : (
           <>
-            {/* Select all */}
             <button
               onClick={toggleAll}
               className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors mb-3 select-none"
@@ -286,11 +371,10 @@ function BatchGeneratePanel({ onSuccess }: { onSuccess: () => void }) {
               {allSelected ? "Deselect all" : `Select all (${availableJobs.length})`}
             </button>
 
-            {/* Job checkboxes */}
             <div className="space-y-1.5 mb-4">
               {availableJobs.map((job) => {
                 const isSelected = selected.has(job.id);
-                const domain = (() => { try { return new URL(job.url).hostname.replace("www.", ""); } catch { return job.url; } })();
+                const domain = (() => { try { return new URL(job.url).hostname.replace("www.", ""); } catch { return job.url || "manual"; } })();
                 return (
                   <button
                     key={job.id}
@@ -321,7 +405,6 @@ function BatchGeneratePanel({ onSuccess }: { onSuccess: () => void }) {
               })}
             </div>
 
-            {/* Progress bar when running */}
             {isRunning && (
               <div className="mb-4">
                 <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
@@ -337,7 +420,6 @@ function BatchGeneratePanel({ onSuccess }: { onSuccess: () => void }) {
               </div>
             )}
 
-            {/* Generate button */}
             <Button
               className="w-full"
               disabled={!someSelected || isRunning}

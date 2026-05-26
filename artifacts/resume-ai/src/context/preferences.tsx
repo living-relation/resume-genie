@@ -5,11 +5,20 @@ export type Tone = "professional" | "casual" | "executive" | "creative" | "techn
 export type WritingStyle = "standard" | "concise" | "detailed" | "storytelling";
 export type Truthfulness = 0 | 1 | 2 | 3 | 4;
 
+export interface UserProfile {
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  linkedin: string;
+}
+
 export interface Preferences {
   theme: Theme;
   tone: Tone;
   style: WritingStyle;
   truthfulness: Truthfulness;
+  profile: UserProfile;
 }
 
 interface PreferencesContextValue extends Preferences {
@@ -17,6 +26,7 @@ interface PreferencesContextValue extends Preferences {
   setTone: (t: Tone) => void;
   setStyle: (s: WritingStyle) => void;
   setTruthfulness: (v: Truthfulness) => void;
+  setProfile: (p: UserProfile) => void;
 }
 
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
@@ -45,11 +55,14 @@ function applyTheme(theme: Theme) {
   }
 }
 
+const DEFAULT_PROFILE: UserProfile = { name: "", email: "", phone: "", location: "", linkedin: "" };
+
 export function PreferencesProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => load("pref:theme", "light"));
   const [tone, setToneState] = useState<Tone>(() => load("pref:tone", "professional"));
   const [style, setStyleState] = useState<WritingStyle>(() => load("pref:style", "standard"));
   const [truthfulness, setTruthfulnessState] = useState<Truthfulness>(() => load("pref:truthfulness", 1));
+  const [profile, setProfileState] = useState<UserProfile>(() => load("pref:profile", DEFAULT_PROFILE));
 
   useEffect(() => { applyTheme(theme); }, [theme]);
 
@@ -57,9 +70,10 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
   const setTone = (t: Tone) => { save("pref:tone", t); setToneState(t); };
   const setStyle = (s: WritingStyle) => { save("pref:style", s); setStyleState(s); };
   const setTruthfulness = (v: Truthfulness) => { save("pref:truthfulness", v); setTruthfulnessState(v); };
+  const setProfile = (p: UserProfile) => { save("pref:profile", p); setProfileState(p); };
 
   return (
-    <PreferencesContext.Provider value={{ theme, tone, style, truthfulness, setTheme, setTone, setStyle, setTruthfulness }}>
+    <PreferencesContext.Provider value={{ theme, tone, style, truthfulness, profile, setTheme, setTone, setStyle, setTruthfulness, setProfile }}>
       {children}
     </PreferencesContext.Provider>
   );
