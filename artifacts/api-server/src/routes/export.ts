@@ -21,6 +21,58 @@ interface ProfileData {
   linkedin?: string;
 }
 
+// ─── PLACEHOLDER SUBSTITUTION ────────────────────────────────────────────────
+
+function replacePlaceholders(text: string, profile: ProfileData): string {
+  let out = text;
+
+  // Name variants
+  if (profile.name) {
+    out = out.replace(/\[Your Name\]/gi, profile.name);
+    out = out.replace(/\[Full Name\]/gi, profile.name);
+    out = out.replace(/\[Name\]/gi, profile.name);
+  }
+
+  // Email variants
+  if (profile.email) {
+    out = out.replace(/\[Your Email(?: Address)?\]/gi, profile.email);
+    out = out.replace(/\[Email(?: Address)?\]/gi, profile.email);
+    out = out.replace(/\[your\.email@example\.com\]/gi, profile.email);
+    out = out.replace(/\[email@example\.com\]/gi, profile.email);
+  }
+
+  // Phone variants
+  if (profile.phone) {
+    out = out.replace(/\[Your Phone(?: Number)?\]/gi, profile.phone);
+    out = out.replace(/\[Phone(?: Number)?\]/gi, profile.phone);
+    out = out.replace(/\[Telephone\]/gi, profile.phone);
+  }
+
+  // Location variants
+  if (profile.location) {
+    out = out.replace(/\[City,?\s*State(?:\s*ZIP)?\]/gi, profile.location);
+    out = out.replace(/\[City,?\s*State\]/gi, profile.location);
+    out = out.replace(/\[Location\]/gi, profile.location);
+    out = out.replace(/\[Your Location\]/gi, profile.location);
+  }
+
+  // LinkedIn variants
+  if (profile.linkedin) {
+    out = out.replace(/\[LinkedIn(?: Profile)?(?: URL)?\]/gi, profile.linkedin);
+    out = out.replace(/\[LinkedIn\]/gi, profile.linkedin);
+  } else {
+    // If no LinkedIn provided, remove the whole placeholder (including surrounding separators)
+    out = out.replace(/\s*[|·•]\s*\[LinkedIn(?: Profile)?(?: URL)?\]/gi, "");
+    out = out.replace(/\[LinkedIn(?: Profile)?(?: URL)?\]\s*[|·•]\s*/gi, "");
+    out = out.replace(/\[LinkedIn(?: Profile)?(?: URL)?\]/gi, "");
+    out = out.replace(/\s*[|·•]\s*\[LinkedIn\]/gi, "");
+    out = out.replace(/\[LinkedIn\]\s*[|·•]\s*/gi, "");
+    out = out.replace(/\[LinkedIn\]/gi, "");
+  }
+
+  return out;
+}
+
 // ─── TEXT PARSER ─────────────────────────────────────────────────────────────
 
 interface ParsedSection {
@@ -422,11 +474,11 @@ router.post("/applications/:id/export", async (req, res): Promise<void> => {
     let filename: string;
 
     if (docType === "cover_letter") {
-      const text = app.coverLetter ?? "";
+      const text = replacePlaceholders(app.coverLetter ?? "", profile);
       paragraphs = buildCoverLetter(text, resolvedName, profile, layout);
       filename = `cover-letter-${safeTitle}-${layout}.docx`;
     } else {
-      const text = app.resume ?? "";
+      const text = replacePlaceholders(app.resume ?? "", profile);
       const sections = parseResumeText(text);
       paragraphs =
         layout === "classic" ? buildClassic(resolvedName, profile, sections) :
