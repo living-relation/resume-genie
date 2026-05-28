@@ -15,10 +15,34 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/documents", label: "Documents", icon: FileText },
-  { href: "/jobs", label: "Jobs", icon: Briefcase },
-  { href: "/applications", label: "Applications", icon: FileCheck },
+  {
+    href: "/",
+    label: "Dashboard",
+    shortLabel: "Home",
+    description: "Overview & quick actions",
+    icon: LayoutDashboard,
+  },
+  {
+    href: "/documents",
+    label: "My Uploads",
+    shortLabel: "Uploads",
+    description: "Resumes & cover letters you've added",
+    icon: FileText,
+  },
+  {
+    href: "/jobs",
+    label: "Job Listings",
+    shortLabel: "Jobs",
+    description: "Scraped job postings",
+    icon: Briefcase,
+  },
+  {
+    href: "/applications",
+    label: "Generated Resumes",
+    shortLabel: "Generated",
+    description: "AI-tailored resumes & cover letters",
+    icon: FileCheck,
+  },
 ];
 
 const themes: { value: Theme; label: string; icon: React.ElementType; preview: string }[] = [
@@ -256,20 +280,28 @@ function DesktopSidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
         </div>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         <p className="px-2 pb-2 text-xs font-medium text-sidebar-foreground/40 uppercase tracking-widest">Workspace</p>
-        {navItems.map(({ href, label, icon: Icon }) => {
+        {navItems.map(({ href, label, description, icon: Icon }) => {
           const active = location === href;
           return (
             <Link key={href} href={href}>
               <div className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer",
+                "flex items-start gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer",
                 active
                   ? "bg-sidebar-accent text-sidebar-foreground"
                   : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/60"
               )}>
-                <Icon className="w-4 h-4 flex-shrink-0" />
-                {label}
+                <Icon className={cn("w-4 h-4 flex-shrink-0 mt-0.5", active ? "text-sidebar-primary" : "")} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium leading-tight">{label}</div>
+                  <div className={cn(
+                    "text-[11px] leading-tight mt-0.5",
+                    active ? "text-sidebar-foreground/70" : "text-sidebar-foreground/40"
+                  )}>
+                    {description}
+                  </div>
+                </div>
               </div>
             </Link>
           );
@@ -338,21 +370,24 @@ function MobileLayout({ children, onOpenSettings }: { children: React.ReactNode;
           </div>
           <span className="text-sidebar-foreground font-semibold text-sm">Resume AI</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <Link href="/upload">
-            <button className="w-8 h-8 flex items-center justify-center rounded-md text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors">
-              <Upload className="w-4 h-4" />
+            <button className="flex items-center gap-1.5 px-2.5 h-8 rounded-md text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors">
+              <Upload className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">Upload</span>
             </button>
           </Link>
           <Link href="/add-job">
-            <button className="w-8 h-8 flex items-center justify-center rounded-md text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors">
-              <PlusCircle className="w-4 h-4" />
+            <button className="flex items-center gap-1.5 px-2.5 h-8 rounded-md text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors">
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">Add Job</span>
             </button>
           </Link>
           <button
             onClick={onOpenSettings}
             className="w-8 h-8 flex items-center justify-center rounded-md text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
             data-testid="btn-open-settings-mobile"
+            aria-label="Settings"
           >
             <Settings className="w-4 h-4" />
           </button>
@@ -367,18 +402,21 @@ function MobileLayout({ children, onOpenSettings }: { children: React.ReactNode;
       {/* Bottom tab bar */}
       <nav className="flex-shrink-0 bg-sidebar border-t border-sidebar-border safe-area-inset-bottom">
         <div className="flex items-stretch">
-          {navItems.map(({ href, label, icon: Icon }) => {
+          {navItems.map(({ href, shortLabel, icon: Icon }) => {
             const active = location === href;
             return (
               <Link key={href} href={href} className="flex-1">
                 <div className={cn(
-                  "flex flex-col items-center justify-center py-2.5 gap-1 transition-colors",
+                  "flex flex-col items-center justify-center py-2 gap-0.5 transition-colors relative",
                   active
                     ? "text-sidebar-primary"
-                    : "text-sidebar-foreground/50 hover:text-sidebar-foreground"
+                    : "text-sidebar-foreground/60 hover:text-sidebar-foreground"
                 )}>
+                  {active && (
+                    <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b-full bg-sidebar-primary" />
+                  )}
                   <Icon className="w-5 h-5" />
-                  <span className="text-[10px] font-medium">{label}</span>
+                  <span className="text-[11px] font-medium">{shortLabel}</span>
                 </div>
               </Link>
             );
