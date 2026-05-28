@@ -361,9 +361,9 @@ function MobileLayout({ children, onOpenSettings }: { children: React.ReactNode;
   const [location] = useLocation();
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-background">
-      {/* Top header */}
-      <header className="flex-shrink-0 bg-sidebar border-b border-sidebar-border px-4 py-3 flex items-center justify-between">
+    <div className="min-h-screen bg-background">
+      {/* Top header — fixed so it's always visible */}
+      <header className="fixed top-0 left-0 right-0 bg-sidebar border-b border-sidebar-border px-4 py-3 flex items-center justify-between z-40 h-14">
         <div className="flex items-center gap-2.5">
           <div className="w-6 h-6 rounded-md bg-sidebar-primary flex items-center justify-center flex-shrink-0">
             <FileCheck className="w-3.5 h-3.5 text-sidebar-primary-foreground" />
@@ -394,14 +394,17 @@ function MobileLayout({ children, onOpenSettings }: { children: React.ReactNode;
         </div>
       </header>
 
-      {/* Scrollable content */}
-      <main className="flex-1 overflow-y-auto">
+      {/* Scrollable content — padded so fixed header & nav don't overlap it */}
+      <main
+        className="pt-14"
+        style={{ paddingBottom: "calc(4rem + env(safe-area-inset-bottom, 0px))" }}
+      >
         {children}
       </main>
 
-      {/* Bottom tab bar */}
+      {/* Bottom tab bar — fixed so it's ALWAYS visible, no matter the page */}
       <nav
-        className="flex-shrink-0 bg-sidebar border-t border-sidebar-border z-30 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]"
+        className="fixed bottom-0 left-0 right-0 bg-sidebar border-t border-sidebar-border z-40 shadow-[0_-2px_12px_rgba(0,0,0,0.12)]"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         <div className="flex items-stretch">
