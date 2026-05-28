@@ -400,7 +400,10 @@ function MobileLayout({ children, onOpenSettings }: { children: React.ReactNode;
       </main>
 
       {/* Bottom tab bar */}
-      <nav className="flex-shrink-0 bg-sidebar border-t border-sidebar-border safe-area-inset-bottom">
+      <nav
+        className="flex-shrink-0 bg-sidebar border-t border-sidebar-border z-30 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
         <div className="flex items-stretch">
           {navItems.map(({ href, shortLabel, icon: Icon }) => {
             const active = location === href;
