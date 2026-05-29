@@ -102,25 +102,44 @@ function stripGeneratedHeader(text: string, profile: ProfileData): string {
     return namesToStrip.some(n => n.length > 0 && (norm === n || norm.startsWith(n)));
   };
 
+  // A line that looks like a person's full name even if it doesn't match the
+  // profile exactly (e.g. the AI added a middle initial: "Daniel R. Grippin").
+  // Only trusted as the very first content line.
+  const looksLikeGenericName = (line: string): boolean => {
+    const t = line.trim();
+    if (!t || t.length > 50 || /\d/.test(t)) return false;
+    const words = t.split(/\s+/);
+    if (words.length < 2 || words.length > 5) return false;
+    return words.every(w => /^[A-Z][a-zA-Z.'’-]*$/.test(w));
+  };
+
   let i = 0;
-  let strippedSomething = false;
-  // Only inspect the top of the document — stop at the first line that is
-  // neither blank, the user's name, nor a contact line.
+  let sawContent = false;
+  // "trusted" = a contact line or an exact profile-name match. We only strip a
+  // generic-name first line when it's backed by a trusted line, so we never eat
+  // a real section title that happens to be capitalized words.
+  let sawTrusted = false;
+  let end = 0;
   while (i < lines.length) {
     const t = (lines[i] ?? "").trim();
     if (!t) { i++; continue; }            // skip blank lines in the header zone
-    if (looksLikeName(t) || looksLikeContact(t)) {
+    const isContact = looksLikeContact(t);
+    const isProfileName = looksLikeName(t);
+    const isGenericName = !sawContent && looksLikeGenericName(t);
+    if (isContact || isProfileName || isGenericName) {
+      if (isContact || isProfileName) sawTrusted = true;
+      sawContent = true;
       i++;
-      strippedSomething = true;
+      end = i;
       continue;
     }
     break;                                 // first real content line
   }
 
-  if (!strippedSomething) return text;
+  if (end === 0 || !sawTrusted) return text;
   // drop any remaining leading blank lines after the stripped header
-  while (i < lines.length && !(lines[i] ?? "").trim()) i++;
-  return lines.slice(i).join("\n");
+  while (end < lines.length && !(lines[end] ?? "").trim()) end++;
+  return lines.slice(end).join("\n");
 }
 
 // ─── COVER LETTER PREAMBLE STRIPPING ─────────────────────────────────────────

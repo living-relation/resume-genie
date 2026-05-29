@@ -77,7 +77,7 @@ Match keywords from the job description wherever possible.`;
 
     const userPrompt = `Here are the candidate's documents:\n\n${docsContext}\n\n---\n\nHere is the job listing:\n\n${jobContext}\n\n---\n\nPlease generate:
 
-1. A tailored RESUME with sections: Contact Info (use placeholder [Name], [Email], [Phone], [LinkedIn] if not found in documents), Summary, Skills, Experience, Education. Tailor bullet points to match job requirements.
+1. A tailored RESUME. Do NOT include a name or contact-information header at the top — no name line, no email, phone, LinkedIn, or mailing address. That header is rendered separately. Start the resume DIRECTLY with the SUMMARY section, followed by SKILLS, EXPERIENCE, and EDUCATION. Tailor bullet points to match job requirements.
 
 2. A tailored COVER LETTER addressed to the hiring team at ${job.company || "the company"}, no longer than 4 paragraphs. Reference specific aspects of the job. Show genuine enthusiasm and connect the candidate's background to the role.
    - Start the cover letter DIRECTLY with the salutation (e.g. "Dear Hiring Team,"). Do NOT include a letterhead, the candidate's name or contact details, a date, or the recipient's mailing address at the top — those are added separately. Do not repeat the company name in an address block; it's fine to mention it naturally within the letter body.
