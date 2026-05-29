@@ -33,6 +33,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 
 const statusConfig = {
@@ -267,21 +278,80 @@ function JobRow({ job }: { job: JobRowData }) {
 
 export default function Jobs() {
   const { data: jobs, isLoading, refetch } = useListJobs();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const deleteJob = useDeleteJob();
+  const [clearing, setClearing] = useState(false);
   const hasPending = jobs?.some((j) => j.status === "pending");
+  const hasJobs = !!jobs && jobs.length > 0;
+
+  const handleClearAll = async () => {
+    if (!jobs || clearing) return;
+    setClearing(true);
+    const results = await Promise.allSettled(
+      jobs.map((job) => deleteJob.mutateAsync({ id: job.id }))
+    );
+    await queryClient.invalidateQueries({ queryKey: getListJobsQueryKey() });
+    const failed = results.filter((r) => r.status === "rejected").length;
+    if (failed === 0) {
+      toast({ title: "All job listings cleared" });
+    } else {
+      toast({
+        title: `Couldn't remove ${failed} job${failed === 1 ? "" : "s"}`,
+        variant: "destructive",
+      });
+    }
+    setClearing(false);
+  };
 
   return (
     <div className="p-8 max-w-3xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground" data-testid="page-title">Job Listings</h1>
           <p className="text-muted-foreground mt-1 text-sm">Jobs you want to apply to. We scrape each listing automatically — or you can paste the details manually.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {hasPending && (
             <Button variant="outline" size="sm" onClick={() => refetch()} data-testid="btn-refresh-jobs">
               <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
               Refresh
             </Button>
+          )}
+          {hasJobs && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/10"
+                  disabled={clearing}
+                  data-testid="btn-clear-jobs"
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                  {clearing ? "Clearing..." : "Clear All"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Clear all job listings?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete all {jobs!.length} job listing{jobs!.length === 1 ? "" : "s"}. Generated resumes already created from these jobs are kept. This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleClearAll}
+                    disabled={clearing}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    data-testid="btn-confirm-clear-jobs"
+                  >
+                    Delete All
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
           <Link href="/add-job">
             <Button size="sm" data-testid="btn-add-job">

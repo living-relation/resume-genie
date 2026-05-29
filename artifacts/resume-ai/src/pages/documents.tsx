@@ -12,6 +12,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const typeLabels: Record<string, string> = {
   resume: "Resume",
@@ -105,20 +116,82 @@ function DocumentRow({ doc }: { doc: { id: number; name: string; type: string; c
 
 export default function Documents() {
   const { data: documents, isLoading } = useListDocuments();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const deleteDoc = useDeleteDocument();
+  const [clearing, setClearing] = useState(false);
+
+  const hasDocuments = !!documents && documents.length > 0;
+
+  const handleClearAll = async () => {
+    if (!documents || clearing) return;
+    setClearing(true);
+    const results = await Promise.allSettled(
+      documents.map((doc) => deleteDoc.mutateAsync({ id: doc.id }))
+    );
+    await queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
+    const failed = results.filter((r) => r.status === "rejected").length;
+    if (failed === 0) {
+      toast({ title: "All documents cleared" });
+    } else {
+      toast({
+        title: `Couldn't delete ${failed} document${failed === 1 ? "" : "s"}`,
+        variant: "destructive",
+      });
+    }
+    setClearing(false);
+  };
 
   return (
     <div className="p-8 max-w-3xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground" data-testid="page-title">My Documents</h1>
           <p className="text-muted-foreground mt-1 text-sm">Your uploaded resumes, cover letters, and portfolio items.</p>
         </div>
-        <Link href="/upload">
-          <Button size="sm" data-testid="btn-upload-new">
-            <Upload className="w-3.5 h-3.5 mr-1.5" />
-            Upload New
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {hasDocuments && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/10"
+                  disabled={clearing}
+                  data-testid="btn-clear-documents"
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                  {clearing ? "Clearing..." : "Clear All"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Clear all documents?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete all {documents!.length} uploaded document{documents!.length === 1 ? "" : "s"} (resumes, cover letters, and portfolio items). This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleClearAll}
+                    disabled={clearing}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    data-testid="btn-confirm-clear-documents"
+                  >
+                    Delete All
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          <Link href="/upload">
+            <Button size="sm" data-testid="btn-upload-new">
+              <Upload className="w-3.5 h-3.5 mr-1.5" />
+              Upload New
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {isLoading && (
