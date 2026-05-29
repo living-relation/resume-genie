@@ -123,6 +123,51 @@ function stripGeneratedHeader(text: string, profile: ProfileData): string {
   return lines.slice(i).join("\n");
 }
 
+// ─── COVER LETTER PREAMBLE STRIPPING ─────────────────────────────────────────
+// AI cover letters usually open with a full letterhead: the candidate's name +
+// address + contact line (duplicating the header we render), then a date and
+// the recipient's mailing address (which repeats the company name). Since we
+// render our own header and the letter references the company in its body, we
+// drop everything before the salutation ("Dear ...,") for a clean letter.
+
+function stripCoverLetterPreamble(text: string, _profile: ProfileData): string {
+  const lines = text.split("\n");
+
+  // Case 1: there's a salutation — keep it and drop everything above it
+  // (sender letterhead, date, recipient address block, "To:"/"Re:" lines).
+  const salutationIdx = lines.findIndex((l) =>
+    /^\s*(dear\b|to whom it may concern|hello\b|hi\b|greetings\b)/i.test(l.trim())
+  );
+  if (salutationIdx >= 0) {
+    return lines.slice(salutationIdx).join("\n").replace(/^\n+/, "");
+  }
+
+  // Case 2: no salutation. The letter may still open with a recipient block
+  // (e.g. "Hiring Team" / company / city). Drop leading blank + short
+  // non-prose lines until the first real body sentence.
+  const wordCount = (t: string) => t.split(/\s+/).filter(Boolean).length;
+  let i = 0;
+  let stripped = false;
+  let foundBody = false;
+  while (i < lines.length) {
+    const t = (lines[i] ?? "").trim();
+    if (!t) {
+      i++;
+      continue;
+    }
+    if (wordCount(t) >= 8) {
+      foundBody = true;
+      break; // reached the letter body
+    }
+    i++;
+    stripped = true;
+  }
+
+  if (!stripped || !foundBody) return text;
+  while (i < lines.length && !(lines[i] ?? "").trim()) i++;
+  return lines.slice(i).join("\n");
+}
+
 // ─── TEXT PARSER ─────────────────────────────────────────────────────────────
 
 interface ParsedSection {
@@ -524,7 +569,7 @@ router.post("/applications/:id/export", async (req, res): Promise<void> => {
     let filename: string;
 
     if (docType === "cover_letter") {
-      const text = stripGeneratedHeader(replacePlaceholders(app.coverLetter ?? "", profile), profile);
+      const text = stripCoverLetterPreamble(replacePlaceholders(app.coverLetter ?? "", profile), profile);
       paragraphs = buildCoverLetter(text, resolvedName, profile, layout);
       filename = `cover-letter-${safeTitle}-${layout}.docx`;
     } else {
