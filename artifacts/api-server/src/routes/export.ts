@@ -73,6 +73,56 @@ function replacePlaceholders(text: string, profile: ProfileData): string {
   return out;
 }
 
+// ─── HEADER STRIPPING ────────────────────────────────────────────────────────
+// The AI-generated text usually begins with its own name + contact block.
+// Since we render our own header from the profile, strip the leading one
+// to avoid a duplicate header in the exported document.
+
+function stripGeneratedHeader(text: string, profile: ProfileData): string {
+  const lines = text.split("\n");
+
+  const namesToStrip = [profile.name]
+    .filter((s): s is string => !!s && !s.startsWith("["))
+    .map(s => s.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim());
+
+  const looksLikeContact = (line: string): boolean => {
+    const t = line.trim();
+    if (!t) return false;
+    if (/[\w.+-]+@[\w-]+\.[\w.-]+/.test(t)) return true;        // email
+    if (/linkedin\.com/i.test(t)) return true;                  // linkedin
+    if (/\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}/.test(t)) return true; // phone
+    // pipe/middot-separated short line (classic contact line)
+    if (/[|·•]/.test(t) && t.length < 140) return true;
+    return false;
+  };
+
+  const looksLikeName = (line: string): boolean => {
+    const norm = line.trim().toLowerCase().replace(/[^a-z0-9\s]/g, "").trim();
+    if (!norm) return false;
+    return namesToStrip.some(n => n.length > 0 && (norm === n || norm.startsWith(n)));
+  };
+
+  let i = 0;
+  let strippedSomething = false;
+  // Only inspect the top of the document — stop at the first line that is
+  // neither blank, the user's name, nor a contact line.
+  while (i < lines.length) {
+    const t = (lines[i] ?? "").trim();
+    if (!t) { i++; continue; }            // skip blank lines in the header zone
+    if (looksLikeName(t) || looksLikeContact(t)) {
+      i++;
+      strippedSomething = true;
+      continue;
+    }
+    break;                                 // first real content line
+  }
+
+  if (!strippedSomething) return text;
+  // drop any remaining leading blank lines after the stripped header
+  while (i < lines.length && !(lines[i] ?? "").trim()) i++;
+  return lines.slice(i).join("\n");
+}
+
 // ─── TEXT PARSER ─────────────────────────────────────────────────────────────
 
 interface ParsedSection {
@@ -474,11 +524,11 @@ router.post("/applications/:id/export", async (req, res): Promise<void> => {
     let filename: string;
 
     if (docType === "cover_letter") {
-      const text = replacePlaceholders(app.coverLetter ?? "", profile);
+      const text = stripGeneratedHeader(replacePlaceholders(app.coverLetter ?? "", profile), profile);
       paragraphs = buildCoverLetter(text, resolvedName, profile, layout);
       filename = `cover-letter-${safeTitle}-${layout}.docx`;
     } else {
-      const text = replacePlaceholders(app.resume ?? "", profile);
+      const text = stripGeneratedHeader(replacePlaceholders(app.resume ?? "", profile), profile);
       const sections = parseResumeText(text);
       paragraphs =
         layout === "classic" ? buildClassic(resolvedName, profile, sections) :
