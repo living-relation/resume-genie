@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "Resume AI"
+title = "Resume Genie"
 version = "1.0.0"
 id = "artifacts/resume-ai"
 router = "path"
