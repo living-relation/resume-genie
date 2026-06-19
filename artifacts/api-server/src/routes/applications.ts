@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db, applicationsTable, jobsTable, documentsTable } from "@workspace/db";
 import {
   CreateApplicationBody,
@@ -8,6 +8,7 @@ import {
 } from "@workspace/api-zod";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { logger } from "../lib/logger";
+import { stripSession } from "../lib/session";
 
 const router: IRouter = Router();
 
@@ -119,8 +120,12 @@ Format your response EXACTLY like this:
 }
 
 router.get("/applications", async (req, res): Promise<void> => {
-  const apps = await db.select().from(applicationsTable).orderBy(applicationsTable.createdAt);
-  res.json(apps);
+  const apps = await db
+    .select()
+    .from(applicationsTable)
+    .where(eq(applicationsTable.sessionId, req.sessionId))
+    .orderBy(applicationsTable.createdAt);
+  res.json(apps.map(stripSession));
 });
 
 router.post("/applications", async (req, res): Promise<void> => {
@@ -132,13 +137,20 @@ router.post("/applications", async (req, res): Promise<void> => {
 
   const { jobId, tone, style, truthfulness } = parsed.data;
 
-  const [job] = await db.select().from(jobsTable).where(eq(jobsTable.id, jobId));
+  const [job] = await db
+    .select()
+    .from(jobsTable)
+    .where(and(eq(jobsTable.id, jobId), eq(jobsTable.sessionId, req.sessionId)));
   if (!job) {
     res.status(400).json({ error: "Job not found" });
     return;
   }
 
-  const documents = await db.select().from(documentsTable).orderBy(documentsTable.createdAt);
+  const documents = await db
+    .select()
+    .from(documentsTable)
+    .where(eq(documentsTable.sessionId, req.sessionId))
+    .orderBy(documentsTable.createdAt);
   if (documents.length === 0) {
     res.status(400).json({ error: "Please upload at least one document before generating an application" });
     return;
@@ -146,10 +158,10 @@ router.post("/applications", async (req, res): Promise<void> => {
 
   const [application] = await db
     .insert(applicationsTable)
-    .values({ jobId, jobTitle: job.title, jobCompany: job.company, status: "generating" })
+    .values({ sessionId: req.sessionId, jobId, jobTitle: job.title, jobCompany: job.company, status: "generating" })
     .returning();
 
-  res.status(201).json(application);
+  res.status(201).json(stripSession(application));
 
   generateApplicationContent(application.id, job, documents, tone, style, truthfulness).catch((err) => {
     logger.error({ err, applicationId: application.id }, "Unhandled error in generation");
@@ -162,12 +174,15 @@ router.get("/applications/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: params.error.message });
     return;
   }
-  const [app] = await db.select().from(applicationsTable).where(eq(applicationsTable.id, params.data.id));
+  const [app] = await db
+    .select()
+    .from(applicationsTable)
+    .where(and(eq(applicationsTable.id, params.data.id), eq(applicationsTable.sessionId, req.sessionId)));
   if (!app) {
     res.status(404).json({ error: "Application not found" });
     return;
   }
-  res.json(app);
+  res.json(stripSession(app));
 });
 
 router.delete("/applications/:id", async (req, res): Promise<void> => {
@@ -176,7 +191,10 @@ router.delete("/applications/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: params.error.message });
     return;
   }
-  const [app] = await db.delete(applicationsTable).where(eq(applicationsTable.id, params.data.id)).returning();
+  const [app] = await db
+    .delete(applicationsTable)
+    .where(and(eq(applicationsTable.id, params.data.id), eq(applicationsTable.sessionId, req.sessionId)))
+    .returning();
   if (!app) {
     res.status(404).json({ error: "Application not found" });
     return;

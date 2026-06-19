@@ -10,6 +10,7 @@ import {
 } from "@workspace/api-zod";
 import * as cheerio from "cheerio";
 import { logger } from "../lib/logger";
+import { stripSession } from "../lib/session";
 
 const router: IRouter = Router();
 
@@ -207,8 +208,12 @@ async function scrapeJobListing(rawUrl: string): Promise<{
 }
 
 router.get("/jobs", async (req, res): Promise<void> => {
-  const jobs = await db.select().from(jobsTable).orderBy(jobsTable.createdAt);
-  res.json(jobs);
+  const jobs = await db
+    .select()
+    .from(jobsTable)
+    .where(eq(jobsTable.sessionId, req.sessionId))
+    .orderBy(jobsTable.createdAt);
+  res.json(jobs.map(stripSession));
 });
 
 router.post("/jobs", async (req, res): Promise<void> => {
@@ -244,6 +249,7 @@ router.post("/jobs", async (req, res): Promise<void> => {
   const [job] = await db
     .insert(jobsTable)
     .values({
+      sessionId: req.sessionId,
       url: url ?? "",
       title: manualTitle,
       company: manualCompany,
@@ -253,7 +259,7 @@ router.post("/jobs", async (req, res): Promise<void> => {
     })
     .returning();
 
-  res.status(201).json(job);
+  res.status(201).json(stripSession(job));
 
   // Only scrape when a URL was provided AND the user didn't already supply text.
   if (url && !manualDescription) {
@@ -270,12 +276,12 @@ router.post("/jobs", async (req, res): Promise<void> => {
           description: description,
           status: title || description ? "scraped" : "failed",
         })
-        .where(and(eq(jobsTable.id, job.id), eq(jobsTable.status, "pending")));
+        .where(and(eq(jobsTable.id, job.id), eq(jobsTable.sessionId, job.sessionId), eq(jobsTable.status, "pending")));
     }).catch((err) => {
       logger.error({ err, jobId: job.id }, "Failed to update job after scraping");
       db.update(jobsTable)
         .set({ status: "failed" })
-        .where(and(eq(jobsTable.id, job.id), eq(jobsTable.status, "pending")))
+        .where(and(eq(jobsTable.id, job.id), eq(jobsTable.sessionId, job.sessionId), eq(jobsTable.status, "pending")))
         .catch(() => {});
     });
   }
@@ -293,7 +299,10 @@ router.patch("/jobs/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [existing] = await db.select().from(jobsTable).where(eq(jobsTable.id, params.data.id));
+  const [existing] = await db
+    .select()
+    .from(jobsTable)
+    .where(and(eq(jobsTable.id, params.data.id), eq(jobsTable.sessionId, req.sessionId)));
   if (!existing) {
     res.status(404).json({ error: "Job not found" });
     return;
@@ -320,10 +329,10 @@ router.patch("/jobs/:id", async (req, res): Promise<void> => {
   const [updated] = await db
     .update(jobsTable)
     .set({ ...next, status })
-    .where(eq(jobsTable.id, params.data.id))
+    .where(and(eq(jobsTable.id, params.data.id), eq(jobsTable.sessionId, req.sessionId)))
     .returning();
 
-  res.json(updated);
+  res.json(stripSession(updated));
 });
 
 router.get("/jobs/:id", async (req, res): Promise<void> => {
@@ -333,13 +342,16 @@ router.get("/jobs/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [job] = await db.select().from(jobsTable).where(eq(jobsTable.id, params.data.id));
+  const [job] = await db
+    .select()
+    .from(jobsTable)
+    .where(and(eq(jobsTable.id, params.data.id), eq(jobsTable.sessionId, req.sessionId)));
   if (!job) {
     res.status(404).json({ error: "Job not found" });
     return;
   }
 
-  res.json(job);
+  res.json(stripSession(job));
 });
 
 router.delete("/jobs/:id", async (req, res): Promise<void> => {
@@ -349,7 +361,10 @@ router.delete("/jobs/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [job] = await db.delete(jobsTable).where(eq(jobsTable.id, params.data.id)).returning();
+  const [job] = await db
+    .delete(jobsTable)
+    .where(and(eq(jobsTable.id, params.data.id), eq(jobsTable.sessionId, req.sessionId)))
+    .returning();
   if (!job) {
     res.status(404).json({ error: "Job not found" });
     return;

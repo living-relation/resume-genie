@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db, applicationsTable, jobsTable } from "@workspace/db";
 import {
   Document, Packer, Paragraph, TextRun, AlignmentType,
@@ -558,7 +558,10 @@ router.post("/applications/:id/export", async (req, res): Promise<void> => {
   const docType: "resume" | "cover_letter" = req.body?.docType === "cover_letter" ? "cover_letter" : "resume";
 
   try {
-    const [app] = await db.select().from(applicationsTable).where(eq(applicationsTable.id, id));
+    const [app] = await db
+      .select()
+      .from(applicationsTable)
+      .where(and(eq(applicationsTable.id, id), eq(applicationsTable.sessionId, req.sessionId)));
     if (!app) {
       res.status(404).json({ error: "Application not found" });
       return;

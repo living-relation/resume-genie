@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db, documentsTable } from "@workspace/db";
 import multer from "multer";
 import pdfParse from "pdf-parse";
@@ -9,13 +9,18 @@ import {
   GetDocumentParams,
   DeleteDocumentParams,
 } from "@workspace/api-zod";
+import { stripSession } from "../lib/session";
 
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 router.get("/documents", async (req, res): Promise<void> => {
-  const docs = await db.select().from(documentsTable).orderBy(documentsTable.createdAt);
-  res.json(docs);
+  const docs = await db
+    .select()
+    .from(documentsTable)
+    .where(eq(documentsTable.sessionId, req.sessionId))
+    .orderBy(documentsTable.createdAt);
+  res.json(docs.map(stripSession));
 });
 
 router.post("/documents", async (req, res): Promise<void> => {
@@ -25,8 +30,11 @@ router.post("/documents", async (req, res): Promise<void> => {
     return;
   }
 
-  const [doc] = await db.insert(documentsTable).values(parsed.data).returning();
-  res.status(201).json(doc);
+  const [doc] = await db
+    .insert(documentsTable)
+    .values({ ...parsed.data, sessionId: req.sessionId })
+    .returning();
+  res.status(201).json(stripSession(doc));
 });
 
 const ACCEPTED_MIMETYPES: Record<string, string> = {
@@ -89,13 +97,16 @@ router.get("/documents/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [doc] = await db.select().from(documentsTable).where(eq(documentsTable.id, params.data.id));
+  const [doc] = await db
+    .select()
+    .from(documentsTable)
+    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.sessionId, req.sessionId)));
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
     return;
   }
 
-  res.json(doc);
+  res.json(stripSession(doc));
 });
 
 router.delete("/documents/:id", async (req, res): Promise<void> => {
@@ -105,7 +116,10 @@ router.delete("/documents/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [doc] = await db.delete(documentsTable).where(eq(documentsTable.id, params.data.id)).returning();
+  const [doc] = await db
+    .delete(documentsTable)
+    .where(and(eq(documentsTable.id, params.data.id), eq(documentsTable.sessionId, req.sessionId)))
+    .returning();
   if (!doc) {
     res.status(404).json({ error: "Document not found" });
     return;

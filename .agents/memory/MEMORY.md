@@ -1,0 +1,1 @@
+- [Anonymous per-browser data isolation](anonymous-session-isolation.md) — no user accounts; signed httpOnly `rg_sid` cookie + `session_id` column scopes every query; new tables/queries must follow the same pattern.
