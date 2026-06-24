@@ -1,0 +1,31 @@
+kind = "slides"
+previewPath = "/resume-ai-deck/"
+title = "Resume AI — Overview"
+version = "1.0.0"
+id = "artifacts/resume-ai-deck"
+router = "path"
+
+[[integratedSkills]]
+name = "slides"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/resume-ai-deck/" ]
+localPort = 24723
+
+[services.development]
+run = "pnpm --filter @workspace/resume-ai-deck run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/resume-ai-deck", "run", "build" ]
+publicDir = "artifacts/resume-ai-deck/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24723"
+BASE_PATH = "/resume-ai-deck/"
