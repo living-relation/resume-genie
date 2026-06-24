@@ -1,1 +1,42 @@
-[]
+[
+  {
+    "id": "9461ae8b-c0eb-4442-8549-30fc0d653a1d",
+    "position": 1,
+    "filepath": "src/pages/slides/Title.tsx",
+    "title": "Resume AI",
+    "description": "Title slide — the last resume tool you'll need",
+    "speakerNotes": ""
+  },
+  {
+    "id": "9e368762-f0b6-4c25-aedb-604ab7f26c19",
+    "position": 2,
+    "filepath": "src/pages/slides/Problem.tsx",
+    "title": "One resume doesn't fit every job",
+    "description": "The problem with generic applications",
+    "speakerNotes": ""
+  },
+  {
+    "id": "4cd7253b-02cb-4525-89af-3fc6138048ac",
+    "position": 3,
+    "filepath": "src/pages/slides/HowItWorks.tsx",
+    "title": "How it works",
+    "description": "The six-step workflow from upload to download",
+    "speakerNotes": ""
+  },
+  {
+    "id": "55847b9f-94f6-42fa-8859-0636c5e198f1",
+    "position": 4,
+    "filepath": "src/pages/slides/Privacy.tsx",
+    "title": "Private by default",
+    "description": "Per-browser isolation and parallel agents",
+    "speakerNotes": ""
+  },
+  {
+    "id": "56d9d847-0a56-463c-91d5-fe3382e03252",
+    "position": 5,
+    "filepath": "src/pages/slides/Stack.tsx",
+    "title": "Built on a modern stack",
+    "description": "The technology behind Resume AI",
+    "speakerNotes": ""
+  }
+]
