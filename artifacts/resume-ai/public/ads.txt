@@ -1,0 +1,4 @@
+# Google AdSense authorized sellers file.
+# Replace pub-0000000000000000 below with your real AdSense publisher ID
+# (the digits after "ca-pub-" in VITE_ADSENSE_CLIENT). Until then ads will not serve.
+google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0

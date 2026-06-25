@@ -11,6 +11,9 @@ Upload your existing resumes and cover letters, paste job listing URLs, and get 
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL`, `AI_INTEGRATIONS_OPENAI_BASE_URL`, `AI_INTEGRATIONS_OPENAI_API_KEY`, `SESSION_SECRET` (signs the per-browser session cookie; the API server refuses to start without it)
+- Optional monetization env:
+  - Frontend (build-time, public — set before building `@workspace/resume-ai`): `VITE_ADSENSE_CLIENT` (e.g. `ca-pub-1234567890123456`), `VITE_ADSENSE_SLOT_DASHBOARD`, `VITE_ADSENSE_SLOT_APPLICATIONS`. When unset, the app renders labeled ad placeholders instead of real ads.
+  - API (cost guardrail, optional overrides): `GENERATION_SESSION_DAILY_LIMIT` (default 20), `GENERATION_IP_DAILY_LIMIT` (default 40).
 
 ## Stack
 
@@ -45,6 +48,16 @@ Upload your existing resumes and cover letters, paste job listing URLs, and get 
 2. **Add jobs** — paste job listing URLs; the server scrapes title, company, description automatically
 3. **Generate** — select a scraped job and hit Generate; the AI reads all your documents + job description and produces a tailored resume + cover letter
 4. **Download** — copy to clipboard or download as .txt for each document
+
+## Monetization (free + ad-supported)
+
+The app is 100% free with no login. Revenue comes from Google AdSense; a paid tier (login/phone/Stripe) is deferred, not removed.
+
+- **AdSense**: non-intrusive responsive ad slots at the bottom of the Dashboard and Applications list (`AdSlot` in `src/components/ads/`). The loader script (`adsense-script.tsx`) is injected only after ads are configured AND the visitor grants consent — so no ad cookies load before consent. Slots are driven by `VITE_ADSENSE_*` env; unconfigured → labeled placeholders.
+- **ads.txt**: `artifacts/resume-ai/public/ads.txt` — replace the placeholder `pub-0000000000000000` with your real publisher ID before AdSense can serve.
+- **Consent**: lightweight cookie/ads consent banner (`consent-banner.tsx`) gating ad loading; choice persisted in `localStorage` (`rg_ads_consent`). For full EEA personalized-ads compliance, Google requires a certified CMP — swap the banner for one when going live in the EU.
+- **Privacy policy**: `/privacy` page, linked from the site footer (`site-footer.tsx`, rendered in `layout.tsx`).
+- **Cost guardrail**: `POST /applications` enforces soft daily caps per session + client IP (`generation_usage` table; `api-server/src/lib/usage.ts`) and returns `429` with a friendly message when exceeded. Requires `app.set("trust proxy", true)` so `req.ip` reflects the real client behind the Replit proxy.
 
 ## Gotchas
 

@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SiteFooter } from "@/components/site-footer";
 
 const navItems = [
   {
@@ -400,6 +401,7 @@ function MobileLayout({ children, onOpenSettings }: { children: React.ReactNode;
         style={{ paddingBottom: "calc(4rem + env(safe-area-inset-bottom, 0px))" }}
       >
         {children}
+        <SiteFooter />
       </main>
 
       {/* Bottom tab bar — fixed so it's ALWAYS visible, no matter the page */}
@@ -452,8 +454,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <DesktopSidebar onOpenSettings={() => setSettingsOpen(true)} />
-      <main className="flex-1 overflow-y-auto">
-        {children}
+      <main className="flex-1 overflow-y-auto flex flex-col">
+        <div className="flex-1">{children}</div>
+        <SiteFooter />
       </main>
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>

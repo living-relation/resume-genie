@@ -285,6 +285,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Daily generation limit reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 
   /applications/{id}:
     get:

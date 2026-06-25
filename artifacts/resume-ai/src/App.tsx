@@ -4,6 +4,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/layout";
 import { PreferencesProvider } from "@/context/preferences";
+import { ConsentProvider } from "@/context/consent";
+import { ConsentBanner } from "@/components/ads/consent-banner";
+import { AdSenseScript } from "@/components/ads/adsense-script";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Documents from "@/pages/documents";
@@ -11,6 +14,7 @@ import UploadDocument from "@/pages/upload";
 import Jobs from "@/pages/jobs";
 import AddJob from "@/pages/add-job";
 import Applications from "@/pages/applications";
+import Privacy from "@/pages/privacy";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +28,7 @@ function Router() {
         <Route path="/jobs" component={Jobs} />
         <Route path="/add-job" component={AddJob} />
         <Route path="/applications" component={Applications} />
+        <Route path="/privacy" component={Privacy} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
@@ -35,10 +40,14 @@ function App() {
     <PreferencesProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
-          <Toaster />
+          <ConsentProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <Router />
+            </WouterRouter>
+            <ConsentBanner />
+            <AdSenseScript />
+            <Toaster />
+          </ConsentProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </PreferencesProvider>

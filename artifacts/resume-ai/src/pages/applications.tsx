@@ -29,6 +29,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { usePreferences, TRUTHFULNESS_LEVELS, TONE_OPTIONS, STYLE_OPTIONS } from "@/context/preferences";
 import { cn } from "@/lib/utils";
+import { AdSlot } from "@/components/ads/ad-slot";
+import { AD_SLOTS } from "@/lib/ads-config";
 
 const statusConfig = {
   generating: { label: "Generating...", icon: Clock, className: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" },
@@ -285,6 +287,7 @@ function BatchGeneratePanel({ onSuccess }: { onSuccess: () => void }) {
 
     let done = 0;
     let failed = 0;
+    let limited = false;
 
     await Promise.allSettled(
       jobIds.map(jobId =>
@@ -297,7 +300,8 @@ function BatchGeneratePanel({ onSuccess }: { onSuccess: () => void }) {
                 setProgress({ done, total: jobIds.length, failed });
                 resolve();
               },
-              onError: () => {
+              onError: (error) => {
+                if ((error as { status?: number })?.status === 429) limited = true;
                 failed++;
                 done++;
                 setProgress({ done, total: jobIds.length, failed });
@@ -312,7 +316,13 @@ function BatchGeneratePanel({ onSuccess }: { onSuccess: () => void }) {
     queryClient.invalidateQueries({ queryKey: getListApplicationsQueryKey() });
 
     const started = jobIds.length - failed;
-    if (failed === 0) {
+    if (limited) {
+      toast({
+        title: "Daily generation limit reached",
+        description: "You've hit today's free limit. Please try again tomorrow.",
+        variant: "destructive",
+      });
+    } else if (failed === 0) {
       toast({ title: `${started} agent${started !== 1 ? "s" : ""} launched — generating in parallel` });
     } else {
       toast({
@@ -560,6 +570,8 @@ export default function Applications() {
           })}
         </div>
       )}
+
+      <AdSlot slot={AD_SLOTS.applications} className="mt-10" />
     </div>
   );
 }

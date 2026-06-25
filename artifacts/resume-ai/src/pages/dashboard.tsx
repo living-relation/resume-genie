@@ -4,6 +4,8 @@ import { FileText, Briefcase, FileCheck, Upload, PlusCircle, ArrowRight } from "
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AdSlot } from "@/components/ads/ad-slot";
+import { AD_SLOTS } from "@/lib/ads-config";
 
 function NavTile({
   href, label, value, icon: Icon, isLoading, testId,
@@ -160,6 +162,8 @@ export default function Dashboard() {
           </Link>
         </div>
       )}
+
+      <AdSlot slot={AD_SLOTS.dashboard} className="mt-10" />
     </div>
   );
 }

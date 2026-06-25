@@ -1,1 +1,2 @@
 - [Anonymous per-browser data isolation](anonymous-session-isolation.md) — no user accounts; signed httpOnly `rg_sid` cookie + `session_id` column scopes every query; new tables/queries must follow the same pattern.
+- [Pre-existing integration-lib build break](preexisting-integration-lib-build-break.md) — full `typecheck` is red on `lib/integrations-openai-ai-*` (not your regression); verify own work per-package; api-server runs via esbuild (no typecheck).

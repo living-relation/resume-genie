@@ -22,3 +22,4 @@ export * from "./messages";
 export * from "./documents";
 export * from "./jobs";
 export * from "./applications";
+export * from "./usage";

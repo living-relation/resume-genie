@@ -9,6 +9,7 @@ import {
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { logger } from "../lib/logger";
 import { stripSession } from "../lib/session";
+import { tryConsumeGeneration } from "../lib/usage";
 
 const router: IRouter = Router();
 
@@ -153,6 +154,19 @@ router.post("/applications", async (req, res): Promise<void> => {
     .orderBy(documentsTable.createdAt);
   if (documents.length === 0) {
     res.status(400).json({ error: "Please upload at least one document before generating an application" });
+    return;
+  }
+
+  // Cost guardrail: cap generations per session + IP per day so a single heavy
+  // user can't run up the OpenAI bill on this free, ad-supported app. This both
+  // checks and records the generation atomically to avoid overshoot when a
+  // browser fires a batch of generations in parallel.
+  const clientIp = req.ip ?? "unknown";
+  const allowed = await tryConsumeGeneration(req.sessionId, clientIp);
+  if (!allowed) {
+    res.status(429).json({
+      error: "You've reached today's free generation limit. Please try again tomorrow.",
+    });
     return;
   }
 

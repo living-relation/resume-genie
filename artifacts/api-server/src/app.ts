@@ -12,6 +12,10 @@ if (!SESSION_SECRET) {
 
 const app: Express = express();
 
+// Behind the Replit reverse proxy: trust X-Forwarded-For so req.ip reflects the
+// real client, which the generation cost guardrail keys on.
+app.set("trust proxy", true);
+
 app.use(
   pinoHttp({
     logger,
