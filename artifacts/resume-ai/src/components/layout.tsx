@@ -147,7 +147,7 @@ function SettingsDialog({ open, onClose }: { open: boolean; onClose: () => void 
 
           {/* Theme */}
           <div>
-            <p className="text-sm font-semibold text-foreground mb-3">Theme</p>
+            <p className="text-sm font-semibold text-foreground mb-3">App appearance</p>
             <div className="grid grid-cols-2 gap-2.5">
               {themes.map(({ value, label, icon: Icon, preview }) => (
                 <button
