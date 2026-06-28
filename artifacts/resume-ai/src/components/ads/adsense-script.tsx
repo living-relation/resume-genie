@@ -1,18 +1,20 @@
 import { useEffect } from "react";
 import { ADSENSE_CLIENT, isAdsConfigured } from "@/lib/ads-config";
-import { useConsent } from "@/context/consent";
+import { initConsentMode } from "@/lib/consent-mode";
 
 /**
- * Injects the Google AdSense loader script — but only once ads are configured
- * AND the visitor has granted consent. Gating the script load (rather than just
- * the ad render) means no ad cookies are set before consent, which keeps us on
- * the right side of EU/UK ePrivacy rules. Renders nothing.
+ * Injects the Google AdSense loader. That loader also delivers Google's
+ * certified Consent Management Platform (the GDPR "Privacy & messaging" message
+ * configured in the AdSense dashboard) to EEA/UK visitors.
+ *
+ * Consent Mode v2 defaults are set to "denied" for EEA/UK before this runs (see
+ * `initConsentMode`), so loading the script does not set personalized ad cookies
+ * for those visitors until they accept in the certified CMP. Renders nothing.
  */
 export function AdSenseScript() {
-  const { consent } = useConsent();
-
   useEffect(() => {
-    if (!isAdsConfigured || consent !== "granted") return;
+    if (!isAdsConfigured) return;
+    initConsentMode();
     if (document.getElementById("adsbygoogle-js")) return;
 
     const script = document.createElement("script");
@@ -21,7 +23,7 @@ export function AdSenseScript() {
     script.crossOrigin = "anonymous";
     script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`;
     document.head.appendChild(script);
-  }, [consent]);
+  }, []);
 
   return null;
 }

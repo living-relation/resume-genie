@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { ADSENSE_CLIENT, isAdsConfigured } from "@/lib/ads-config";
-import { useConsent } from "@/context/consent";
 import { cn } from "@/lib/utils";
 
 interface AdSlotProps {
@@ -12,13 +11,14 @@ interface AdSlotProps {
 /**
  * A single responsive display ad.
  * - Unconfigured (dev): renders a clearly-labeled placeholder so layouts stay intact.
- * - Configured but no consent: renders nothing (no ad cookies before consent).
- * - Configured + consent granted: renders a real responsive AdSense unit.
+ * - Configured: renders a real responsive AdSense unit. Whether personalized ad
+ *   cookies are set is governed by Google Consent Mode v2 + the certified CMP —
+ *   not by hiding the unit — so EEA/UK visitors still see (non-personalized) ads
+ *   before they consent, and personalized ads after.
  */
 export function AdSlot({ slot, className }: AdSlotProps) {
-  const { consent } = useConsent();
   const pushed = useRef(false);
-  const active = isAdsConfigured && consent === "granted" && slot.length > 0;
+  const active = isAdsConfigured && slot.length > 0;
 
   useEffect(() => {
     if (!active || pushed.current) return;
@@ -32,9 +32,9 @@ export function AdSlot({ slot, className }: AdSlotProps) {
       }
     };
 
-    // The AdSense loader script is injected asynchronously only after consent,
-    // so it may not be ready on the first attempt. Retry briefly until the push
-    // succeeds rather than waiting for an unrelated remount.
+    // The AdSense loader script is injected asynchronously, so it may not be
+    // ready on the first attempt. Retry briefly until the push succeeds rather
+    // than waiting for an unrelated remount.
     if (tryPush()) {
       pushed.current = true;
       return;
@@ -68,7 +68,7 @@ export function AdSlot({ slot, className }: AdSlotProps) {
     );
   }
 
-  if (consent !== "granted" || slot.length === 0) return null;
+  if (slot.length === 0) return null;
 
   return (
     <div className={className} data-testid="ad-slot">

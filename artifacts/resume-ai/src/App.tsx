@@ -4,8 +4,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/layout";
 import { PreferencesProvider } from "@/context/preferences";
-import { ConsentProvider } from "@/context/consent";
-import { ConsentBanner } from "@/components/ads/consent-banner";
 import { AdSenseScript } from "@/components/ads/adsense-script";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
@@ -40,14 +38,11 @@ function App() {
     <PreferencesProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <ConsentProvider>
-            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-              <Router />
-            </WouterRouter>
-            <ConsentBanner />
-            <AdSenseScript />
-            <Toaster />
-          </ConsentProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Router />
+          </WouterRouter>
+          <AdSenseScript />
+          <Toaster />
         </TooltipProvider>
       </QueryClientProvider>
     </PreferencesProvider>

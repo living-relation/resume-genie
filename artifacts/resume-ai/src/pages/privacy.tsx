@@ -24,20 +24,24 @@ export default function Privacy() {
           <h2 className="text-base font-semibold">Cookies</h2>
           <p className="mt-2 text-muted-foreground">
             We use a single essential cookie to keep your workspace separate from
-            other visitors. If you consent to advertising, our advertising partner
-            (Google AdSense) may also set cookies to display and measure ads. No ad
-            cookies are set unless you accept them in the consent banner.
+            other visitors. Our advertising partner (Google AdSense) may also set
+            cookies to display and measure ads. For visitors in the EEA, the UK,
+            and Switzerland, no personalized ad cookies or signals are stored
+            until you make a choice in the consent dialog described below.
           </p>
         </section>
 
         <section>
-          <h2 className="text-base font-semibold">Advertising</h2>
+          <h2 className="text-base font-semibold">Advertising &amp; consent</h2>
           <p className="mt-2 text-muted-foreground">
             Resume AI is free and supported by ads served through Google AdSense.
             Google and its partners may use cookies to serve ads based on your
-            prior visits to this and other sites. You can decline ad cookies using
-            the consent banner, and you can learn more about how Google uses data
-            at{" "}
+            prior visits to this and other sites. Visitors in the EEA, the UK, and
+            Switzerland are shown a Google-certified consent management platform
+            (CMP) and we apply Google Consent Mode v2, so personalized advertising
+            is enabled only with your consent. You can change or withdraw your
+            choice at any time using the “Privacy choices” link in the footer. Learn
+            more about how Google uses data at{" "}
             <a
               href="https://policies.google.com/technologies/partner-sites"
               target="_blank"
