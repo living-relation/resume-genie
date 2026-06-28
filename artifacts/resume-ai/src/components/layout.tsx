@@ -398,16 +398,19 @@ function MobileLayout({ children, onOpenSettings, cogAttention }: { children: Re
       {/* Scrollable content — padded so fixed header & nav don't overlap it */}
       <main
         className="pt-14"
-        style={{ paddingBottom: "calc(4rem + env(safe-area-inset-bottom, 0px))" }}
+        style={{ paddingBottom: "calc(7.5rem + env(safe-area-inset-bottom, 0px))" }}
       >
         {children}
         <SiteFooter />
       </main>
 
-      {/* Bottom tab bar — fixed so it's ALWAYS visible, no matter the page */}
+      {/* Bottom tab bar — fixed & raised above Replit's "Made with Replit" badge,
+          which sits ~16px from the bottom and is ~40px tall at the bottom-right.
+          Offsetting the bar up by that strip (plus safe-area inset) keeps every
+          tab visible/tappable, leaving the badge in the clear strip below. */}
       <nav
-        className="fixed bottom-0 left-0 right-0 bg-sidebar border-t border-sidebar-border z-40 shadow-[0_-2px_12px_rgba(0,0,0,0.12)]"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        className="fixed left-0 right-0 bg-sidebar border-t border-sidebar-border z-40 shadow-[0_-2px_12px_rgba(0,0,0,0.12)]"
+        style={{ bottom: "calc(3.5rem + env(safe-area-inset-bottom, 0px))" }}
       >
         <div className="flex items-stretch">
           {navItems.map(({ href, shortLabel, icon: Icon }) => {
