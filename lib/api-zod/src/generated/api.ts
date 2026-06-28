@@ -219,7 +219,10 @@ export const GetStatsResponse = zod.object({
   "jobCount": zod.number(),
   "applicationCount": zod.number(),
   "pendingJobs": zod.number(),
-  "completedApplications": zod.number()
+  "completedApplications": zod.number(),
+  "generationsRemaining": zod.number().describe('Free AI generations left today for this browser\/IP'),
+  "generationsLimit": zod.number().describe('Daily free generation cap for this browser'),
+  "generationsResetAt": zod.coerce.date().describe('When the daily generation allowance resets (next UTC midnight)')
 })
 
 

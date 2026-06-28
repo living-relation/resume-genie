@@ -15,6 +15,49 @@ export function todayUtc(): string {
 }
 
 /**
+ * The ISO timestamp of the next UTC midnight — when daily allowances reset.
+ */
+export function nextUtcReset(): string {
+  const now = new Date();
+  const reset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+  return reset.toISOString();
+}
+
+/**
+ * Reports how many free generations remain today for this browser + IP, the
+ * per-browser daily cap, and when the allowance resets. The effective remaining
+ * count is the smaller of the session and IP allowances, since either cap can
+ * block a generation. Read-only — does not consume any allowance.
+ */
+export async function getGenerationAllowance(
+  sessionId: string,
+  ip: string
+): Promise<{ remaining: number; limit: number; resetAt: string }> {
+  const day = todayUtc();
+  const [[sessionRow], [ipRow]] = await Promise.all([
+    db
+      .select({ c: count() })
+      .from(generationUsageTable)
+      .where(and(eq(generationUsageTable.day, day), eq(generationUsageTable.sessionId, sessionId))),
+    db
+      .select({ c: count() })
+      .from(generationUsageTable)
+      .where(and(eq(generationUsageTable.day, day), eq(generationUsageTable.ip, ip))),
+  ]);
+
+  const sessionCount = Number(sessionRow?.c ?? 0);
+  const ipCount = Number(ipRow?.c ?? 0);
+  const sessionRemaining = Math.max(0, SESSION_DAILY_LIMIT - sessionCount);
+  const ipRemaining = Math.max(0, IP_DAILY_LIMIT - ipCount);
+
+  return {
+    remaining: Math.min(sessionRemaining, ipRemaining),
+    limit: SESSION_DAILY_LIMIT,
+    resetAt: nextUtcReset(),
+  };
+}
+
+/**
  * Atomically checks the daily caps and, if within limits, records one
  * generation. Returns true when the generation was recorded (allowed) and
  * false when a cap was hit.

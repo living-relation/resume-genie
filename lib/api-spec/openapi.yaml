@@ -523,12 +523,25 @@ components:
           type: integer
         completedApplications:
           type: integer
+        generationsRemaining:
+          type: integer
+          description: "Free AI generations left today for this browser/IP"
+        generationsLimit:
+          type: integer
+          description: "Daily free generation cap for this browser"
+        generationsResetAt:
+          type: string
+          format: date-time
+          description: "When the daily generation allowance resets (next UTC midnight)"
       required:
         - documentCount
         - jobCount
         - applicationCount
         - pendingJobs
         - completedApplications
+        - generationsRemaining
+        - generationsLimit
+        - generationsResetAt
 
     PdfExtractResult:
       type: object

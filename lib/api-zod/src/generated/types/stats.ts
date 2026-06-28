@@ -12,4 +12,10 @@ export interface Stats {
   applicationCount: number;
   pendingJobs: number;
   completedApplications: number;
+  /** Free AI generations left today for this browser/IP */
+  generationsRemaining: number;
+  /** Daily free generation cap for this browser */
+  generationsLimit: number;
+  /** When the daily generation allowance resets (next UTC midnight) */
+  generationsResetAt: Date;
 }

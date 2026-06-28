@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdSlot } from "@/components/ads/ad-slot";
 import { AD_SLOTS } from "@/lib/ads-config";
+import { GenerationAllowance } from "@/components/generation-allowance";
 
 function NavTile({
   href, label, value, icon: Icon, isLoading, testId,
@@ -54,9 +55,12 @@ export default function Dashboard() {
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground" data-testid="page-title">Dashboard</h1>
-        <p className="text-muted-foreground mt-1 text-sm">Your job application workspace at a glance.</p>
+      <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground" data-testid="page-title">Dashboard</h1>
+          <p className="text-muted-foreground mt-1 text-sm">Your job application workspace at a glance.</p>
+        </div>
+        <GenerationAllowance className="mt-1" />
       </div>
 
       {/* Nav tiles */}

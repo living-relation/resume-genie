@@ -8,6 +8,7 @@ import {
   useListJobs,
   useGetApplication,
   getGetApplicationQueryKey,
+  getGetStatsQueryKey,
 } from "@workspace/api-client-react";
 import {
   FileCheck, Trash2, Wand2, CheckCircle, Clock, XCircle,
@@ -31,6 +32,7 @@ import { usePreferences, TRUTHFULNESS_LEVELS, TONE_OPTIONS, STYLE_OPTIONS } from
 import { cn } from "@/lib/utils";
 import { AdSlot } from "@/components/ads/ad-slot";
 import { AD_SLOTS } from "@/lib/ads-config";
+import { GenerationAllowance } from "@/components/generation-allowance";
 
 const statusConfig = {
   generating: { label: "Generating...", icon: Clock, className: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" },
@@ -314,6 +316,7 @@ function BatchGeneratePanel({ onSuccess }: { onSuccess: () => void }) {
     );
 
     queryClient.invalidateQueries({ queryKey: getListApplicationsQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetStatsQueryKey() });
 
     const started = jobIds.length - failed;
     if (limited) {
@@ -494,7 +497,7 @@ export default function Applications() {
 
   return (
     <div className="p-4 sm:p-8 max-w-3xl mx-auto">
-      <div className="flex items-center justify-between mb-6 sm:mb-8 flex-wrap gap-3">
+      <div className="flex items-center justify-between mb-4 sm:mb-6 flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground" data-testid="page-title">Applications</h1>
           <p className="text-muted-foreground mt-1 text-sm">AI-generated resumes and cover letters for each job.</p>
@@ -504,6 +507,10 @@ export default function Applications() {
             <RefreshCw className="w-3.5 h-3.5 mr-1.5" />Refresh
           </Button>
         )}
+      </div>
+
+      <div className="mb-6">
+        <GenerationAllowance />
       </div>
 
       <BatchGeneratePanel onSuccess={() => queryClient.invalidateQueries({ queryKey: getListApplicationsQueryKey() })} />
