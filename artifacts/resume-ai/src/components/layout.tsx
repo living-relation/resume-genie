@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { createContext, useCallback, useContext, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
   LayoutDashboard, FileText, Briefcase, FileCheck,
@@ -266,7 +266,7 @@ function SettingsDialog({ open, onClose }: { open: boolean; onClose: () => void 
 }
 
 /* ─── DESKTOP SIDEBAR ────────────────────────────────────────────── */
-function DesktopSidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
+function DesktopSidebar({ onOpenSettings, cogAttention }: { onOpenSettings: () => void; cogAttention: boolean }) {
   const [location] = useLocation();
   const { theme, tone, truthfulness } = usePreferences();
 
@@ -339,7 +339,7 @@ function DesktopSidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors text-sm"
           data-testid="btn-open-settings"
         >
-          <Settings className="w-4 h-4 flex-shrink-0" />
+          <Settings className={cn("w-4 h-4 flex-shrink-0", cogAttention && "cog-attention")} />
           <div className="flex-1 text-left">
             <span className="text-xs">Settings</span>
             <div className="flex items-center gap-1 mt-0.5">
@@ -358,7 +358,7 @@ function DesktopSidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
 }
 
 /* ─── MOBILE LAYOUT ──────────────────────────────────────────────── */
-function MobileLayout({ children, onOpenSettings }: { children: React.ReactNode; onOpenSettings: () => void }) {
+function MobileLayout({ children, onOpenSettings, cogAttention }: { children: React.ReactNode; onOpenSettings: () => void; cogAttention: boolean }) {
   const [location] = useLocation();
 
   return (
@@ -390,7 +390,7 @@ function MobileLayout({ children, onOpenSettings }: { children: React.ReactNode;
             data-testid="btn-open-settings-mobile"
             aria-label="Settings"
           >
-            <Settings className="w-4 h-4" />
+            <Settings className={cn("w-4 h-4", cogAttention && "cog-attention")} />
           </button>
         </div>
       </header>
@@ -435,30 +435,59 @@ function MobileLayout({ children, onOpenSettings }: { children: React.ReactNode;
   );
 }
 
+/* ─── SETTINGS ACTIONS CONTEXT ───────────────────────────────────── */
+interface SettingsActionsContextValue {
+  openSettings: () => void;
+  pokeSettingsCog: () => void;
+}
+
+const SettingsActionsContext = createContext<SettingsActionsContextValue | null>(null);
+
+export function useSettingsActions() {
+  const ctx = useContext(SettingsActionsContext);
+  if (!ctx) throw new Error("useSettingsActions must be used within Layout");
+  return ctx;
+}
+
 /* ─── MAIN LAYOUT ────────────────────────────────────────────────── */
 export function Layout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [cogAttention, setCogAttention] = useState(false);
+  const cogTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  if (isMobile) {
-    return (
-      <>
-        <MobileLayout onOpenSettings={() => setSettingsOpen(true)}>
-          {children}
-        </MobileLayout>
-        <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-      </>
-    );
-  }
+  const openSettings = useCallback(() => setSettingsOpen(true), []);
+
+  const pokeSettingsCog = useCallback(() => {
+    if (cogTimer.current) clearTimeout(cogTimer.current);
+    setCogAttention(false);
+    requestAnimationFrame(() => {
+      setCogAttention(true);
+      cogTimer.current = setTimeout(() => setCogAttention(false), 1100);
+    });
+  }, []);
+
+  const actions: SettingsActionsContextValue = { openSettings, pokeSettingsCog };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <DesktopSidebar onOpenSettings={() => setSettingsOpen(true)} />
-      <main className="flex-1 overflow-y-auto flex flex-col">
-        <div className="flex-1">{children}</div>
-        <SiteFooter />
-      </main>
-      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-    </div>
+    <SettingsActionsContext.Provider value={actions}>
+      {isMobile ? (
+        <>
+          <MobileLayout onOpenSettings={openSettings} cogAttention={cogAttention}>
+            {children}
+          </MobileLayout>
+          <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        </>
+      ) : (
+        <div className="flex h-screen overflow-hidden bg-background">
+          <DesktopSidebar onOpenSettings={openSettings} cogAttention={cogAttention} />
+          <main className="flex-1 overflow-y-auto flex flex-col">
+            <div className="flex-1">{children}</div>
+            <SiteFooter />
+          </main>
+          <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        </div>
+      )}
+    </SettingsActionsContext.Provider>
   );
 }

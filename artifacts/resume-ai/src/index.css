@@ -355,6 +355,28 @@ html[data-theme="unicorn"] {
   }
 }
 
+/* ─── SETTINGS COG ATTENTION ANIMATION ──────────────────────────── */
+@keyframes cog-attention {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  15% { transform: rotate(-18deg) scale(1.15); }
+  30% { transform: rotate(16deg) scale(1.15); }
+  45% { transform: rotate(-12deg) scale(1.1); }
+  60% { transform: rotate(10deg) scale(1.1); }
+  75% { transform: rotate(-6deg) scale(1.05); }
+}
+
+.cog-attention {
+  animation: cog-attention 1s ease-in-out;
+  transform-origin: center;
+  color: hsl(var(--sidebar-primary));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cog-attention {
+    animation: none;
+  }
+}
+
 /* ─── STEAMPUNK FONT FLAVOUR ────────────────────────────────────── */
 html[data-theme="steampunk"] {
   --app-font-sans: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
