@@ -83,7 +83,7 @@ export default function Dashboard() {
         />
         <NavTile
           href="/applications"
-          label="New Assets"
+          label="Generated Assets"
           value={stats?.applicationCount ?? 0}
           icon={FileCheck}
           isLoading={isLoading}
