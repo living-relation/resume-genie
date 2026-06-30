@@ -5,14 +5,14 @@ export default function Privacy() {
         Privacy Policy
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        How Resume AI handles your data.
+        How Resume Genie handles your data.
       </p>
 
       <div className="mt-8 space-y-7 text-sm leading-relaxed text-foreground">
         <section>
           <h2 className="text-base font-semibold">What we store</h2>
           <p className="mt-2 text-muted-foreground">
-            Resume AI lets you paste the text of your resumes, cover letters, and
+            Resume Genie lets you paste the text of your resumes, cover letters, and
             portfolio items, and add job listings. That content is stored so the
             app can generate tailored documents for you. We do not require an
             account: your data is scoped to an anonymous, randomly generated
@@ -34,7 +34,7 @@ export default function Privacy() {
         <section>
           <h2 className="text-base font-semibold">Advertising &amp; consent</h2>
           <p className="mt-2 text-muted-foreground">
-            Resume AI is free and supported by ads served through Google AdSense.
+            Resume Genie is free and supported by ads served through Google AdSense.
             Google and its partners may use cookies to serve ads based on your
             prior visits to this and other sites. Visitors in the EEA, the UK, and
             Switzerland are shown a Google-certified consent management platform

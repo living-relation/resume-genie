@@ -277,7 +277,7 @@ function DesktopSidebar({ onOpenSettings, cogAttention }: { onOpenSettings: () =
           <div className="w-7 h-7 rounded-md bg-sidebar-primary flex items-center justify-center flex-shrink-0">
             <FileCheck className="w-4 h-4 text-sidebar-primary-foreground" />
           </div>
-          <span className="text-sidebar-foreground font-semibold text-sm tracking-tight">Resume AI</span>
+          <span className="text-sidebar-foreground font-semibold text-sm tracking-tight">Resume Genie</span>
         </div>
       </div>
 
@@ -364,24 +364,30 @@ function MobileLayout({ children, onOpenSettings, cogAttention }: { children: Re
   return (
     <div className="min-h-screen bg-background">
       {/* Top header — fixed so it's always visible */}
-      <header className="fixed top-0 left-0 right-0 bg-sidebar border-b border-sidebar-border px-4 py-3 flex items-center justify-between z-40 h-14">
-        <div className="flex items-center gap-2.5">
+      <header className="fixed top-0 left-0 right-0 bg-sidebar border-b border-sidebar-border px-4 py-3 flex items-center justify-end z-40 h-14">
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2.5 pointer-events-none">
           <div className="w-6 h-6 rounded-md bg-sidebar-primary flex items-center justify-center flex-shrink-0">
             <FileCheck className="w-3.5 h-3.5 text-sidebar-primary-foreground" />
           </div>
-          <span className="text-sidebar-foreground font-semibold text-sm">Resume AI</span>
+          <span className="text-sidebar-foreground font-semibold text-sm">Resume Genie</span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="relative z-10 flex items-center gap-1">
           <Link href="/upload">
-            <button className="flex items-center gap-1.5 px-2.5 h-8 rounded-md text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors">
-              <Upload className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">Upload</span>
+            <button
+              className="w-8 h-8 flex items-center justify-center rounded-md text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+              aria-label="Upload document"
+              title="Upload document"
+            >
+              <Upload className="w-4 h-4" />
             </button>
           </Link>
           <Link href="/add-job">
-            <button className="flex items-center gap-1.5 px-2.5 h-8 rounded-md text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors">
-              <PlusCircle className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">Add Job</span>
+            <button
+              className="w-8 h-8 flex items-center justify-center rounded-md text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+              aria-label="Add job listing"
+              title="Add job listing"
+            >
+              <PlusCircle className="w-4 h-4" />
             </button>
           </Link>
           <button
