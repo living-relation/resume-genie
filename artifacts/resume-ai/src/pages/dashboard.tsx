@@ -51,7 +51,7 @@ function NavTile({
 
 export default function Dashboard() {
   const { data: stats, isLoading } = useGetStats();
-  const { openSettings, pokeSettingsCog } = useSettingsActions();
+  const { openSettings } = useSettingsActions();
 
   const isEmpty = !isLoading && stats && stats.documentCount === 0 && stats.jobCount === 0;
 
@@ -125,35 +125,21 @@ export default function Dashboard() {
               tabIndex={0}
               onClick={openSettings}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openSettings(); } }}
-              className="flex flex-col gap-2 p-3 rounded-lg border border-dashed border-primary/40 bg-accent/30 hover:bg-accent/50 transition-colors cursor-pointer group"
+              className="flex items-center gap-4 p-3 rounded-lg border border-dashed border-primary/40 bg-accent/30 hover:bg-accent/50 transition-colors cursor-pointer group"
               data-testid="step-customize"
+              title="Set the language, writing style, and truthfulness of generated resumes & cover letters"
             >
-              <div className="flex items-center gap-4">
-                <div className="w-7 h-7 rounded-full bg-accent text-primary flex items-center justify-center flex-shrink-0 border border-primary/30">
-                  <SlidersHorizontal className="w-3.5 h-3.5" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">
-                    Optional: customize your output
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Set the language, writing style, and truthfulness of generated resumes &amp; cover letters
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground group-hover:text-primary transition-colors">
-                  <Settings className="w-4 h-4" />
-                  <span className="text-xs font-medium">Open Settings</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </div>
+              <div className="w-7 h-7 rounded-full bg-accent text-primary flex items-center justify-center flex-shrink-0 border border-primary/30">
+                <SlidersHorizontal className="w-3.5 h-3.5" />
               </div>
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); pokeSettingsCog(); }}
-                className="self-start ml-11 text-xs text-muted-foreground hover:text-primary underline underline-offset-2 transition-colors"
-                data-testid="link-show-settings-cog"
-              >
-                Same as the settings ⚙ — show me
-              </button>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground">Optional: customize your output</p>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground group-hover:text-primary transition-colors">
+                <Settings className="w-4 h-4" />
+                <span className="text-xs font-medium">Open Settings</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </div>
             </div>
 
             <Link href="/applications">
