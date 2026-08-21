@@ -12,8 +12,9 @@ services:
     runtime: node
     plan: free
     region: oregon
-    # Avoid `corepack enable` — Render's /usr/bin is read-only and it fails with EROFS.
-    buildCommand: npm install -g pnpm@9.15.0 && pnpm install --frozen-lockfile && pnpm run build:deploy
+    # Install devDependencies too — esbuild/vite live there and are required to build.
+    # NODE_ENV=production would otherwise make pnpm skip them.
+    buildCommand: npm install -g pnpm@9.15.0 && pnpm install --frozen-lockfile --prod=false && pnpm run build:deploy
     startCommand: node --enable-source-maps artifacts/api-server/dist/index.mjs
     healthCheckPath: /api/healthz
     envVars:
