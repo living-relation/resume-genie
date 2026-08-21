@@ -12,12 +12,14 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm run build:deploy
-    startCommand: pnpm start
+    buildCommand: corepack enable && corepack prepare pnpm@9.15.0 --activate && pnpm install --frozen-lockfile && pnpm run build:deploy
+    startCommand: node --enable-source-maps artifacts/api-server/dist/index.mjs
     healthCheckPath: /api/healthz
     envVars:
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: "22.12.0"
       - key: OPENAI_BASE_URL
         value: https://generativelanguage.googleapis.com/v1beta/openai/
       - key: AI_MODEL
