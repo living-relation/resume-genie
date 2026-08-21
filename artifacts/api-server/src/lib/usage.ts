@@ -3,12 +3,12 @@ import { db, generationUsageTable } from "@workspace/db";
 
 /**
  * Soft daily caps on AI generations, keyed independently by anonymous session
- * and by client IP. The point is cost control: each generation costs real
- * OpenAI money and there is no payment gate, so we prevent runaway usage while
- * staying generous enough that legitimate users never notice. Tunable via env.
+ * and by client IP. Tuned for free-tier Gemini quotas shared across all
+ * visitors — legitimate users stay within limits; abuse can't burn the day.
+ * Override via GENERATION_SESSION_DAILY_LIMIT / GENERATION_IP_DAILY_LIMIT.
  */
-const SESSION_DAILY_LIMIT = Number(process.env.GENERATION_SESSION_DAILY_LIMIT ?? 20);
-const IP_DAILY_LIMIT = Number(process.env.GENERATION_IP_DAILY_LIMIT ?? 40);
+const SESSION_DAILY_LIMIT = Number(process.env.GENERATION_SESSION_DAILY_LIMIT ?? 5);
+const IP_DAILY_LIMIT = Number(process.env.GENERATION_IP_DAILY_LIMIT ?? 10);
 
 export function todayUtc(): string {
   return new Date().toISOString().slice(0, 10);

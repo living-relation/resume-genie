@@ -1,3 +1,5 @@
+import path from "node:path";
+import fs from "node:fs";
 import express, { type Express } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -12,8 +14,8 @@ if (!SESSION_SECRET) {
 
 const app: Express = express();
 
-// Behind the Replit reverse proxy: trust X-Forwarded-For so req.ip reflects the
-// real client, which the generation cost guardrail keys on.
+// Trust X-Forwarded-For behind Render / other reverse proxies so req.ip is the
+// real client (used by the generation cost guardrail).
 app.set("trust proxy", true);
 
 app.use(
@@ -41,5 +43,32 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
+
+const staticDir =
+  process.env.STATIC_DIR ||
+  path.resolve(process.cwd(), "artifacts/resume-ai/dist/public");
+
+if (fs.existsSync(staticDir)) {
+  app.use(express.static(staticDir, { index: false }));
+  app.use((req, res, next) => {
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      next();
+      return;
+    }
+    if (req.path.startsWith("/api")) {
+      next();
+      return;
+    }
+    res.sendFile(path.join(staticDir, "index.html"), (err) => {
+      if (err) next(err);
+    });
+  });
+  logger.info({ staticDir }, "Serving frontend static files");
+} else {
+  logger.warn(
+    { staticDir },
+    "Frontend build not found — API-only mode (run the Vite app separately in dev)",
+  );
+}
 
 export default app;

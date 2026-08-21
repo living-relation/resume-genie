@@ -58,8 +58,12 @@ export default function Privacy() {
           <h2 className="text-base font-semibold">AI processing</h2>
           <p className="mt-2 text-muted-foreground">
             To generate tailored resumes and cover letters, the content you provide
-            is sent to our AI provider (OpenAI) for processing. It is used only to
-            produce your requested output.
+            is sent to our AI provider (Google Gemini, free tier by default) for
+            processing. On Google’s free tier, prompts and responses may be used to
+            improve Google’s products. Do not submit secrets or highly sensitive
+            personal data you are not comfortable sharing with the AI provider.
+            Generation is rate-limited per browser and IP to protect the shared
+            free quota.
           </p>
         </section>
 

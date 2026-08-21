@@ -6,7 +6,7 @@ import {
   GetApplicationParams,
   DeleteApplicationParams,
 } from "@workspace/api-zod";
-import { openai } from "@workspace/integrations-openai-ai-server";
+import { openai, getAiModel } from "@workspace/integrations-openai-ai-server";
 import { logger } from "../lib/logger";
 import { stripSession } from "../lib/session";
 import { tryConsumeGeneration } from "../lib/usage";
@@ -92,7 +92,7 @@ Format your response EXACTLY like this:
 [cover letter content here]`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5.1",
+      model: getAiModel(),
       max_completion_tokens: 4096,
       messages: [
         { role: "system", content: systemPrompt },

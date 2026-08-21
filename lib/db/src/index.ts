@@ -4,13 +4,43 @@ import * as schema from "./schema";
 
 const { Pool } = pg;
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+let _pool: pg.Pool | null = null;
+let _db: ReturnType<typeof drizzle<typeof schema>> | null = null;
+
+function getPool(): pg.Pool {
+  if (!_pool) {
+    if (!process.env.DATABASE_URL) {
+      throw new Error(
+        "DATABASE_URL must be set. Did you forget to provision a database?",
+      );
+    }
+    _pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  }
+  return _pool;
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle(pool, { schema });
+function getDb() {
+  if (!_db) {
+    _db = drizzle(getPool(), { schema });
+  }
+  return _db;
+}
+
+/** Lazy so dotenv / host env can load before first query. */
+export const pool = new Proxy({} as pg.Pool, {
+  get(_t, prop, receiver) {
+    const p = getPool();
+    const value = Reflect.get(p, prop, receiver);
+    return typeof value === "function" ? value.bind(p) : value;
+  },
+});
+
+export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
+  get(_t, prop, receiver) {
+    const d = getDb();
+    const value = Reflect.get(d as object, prop, receiver);
+    return typeof value === "function" ? value.bind(d) : value;
+  },
+});
 
 export * from "./schema";

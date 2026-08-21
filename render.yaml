@@ -1,0 +1,34 @@
+# Render Blueprint — free public deploy for Resume Genie
+# https://render.com/docs/blueprint-spec
+#
+# After creating the service, set these secrets in the Render dashboard:
+#   DATABASE_URL   — Neon Postgres connection string
+#   OPENAI_API_KEY — free key from https://aistudio.google.com
+# SESSION_SECRET is auto-generated below.
+
+services:
+  - type: web
+    name: resume-genie
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm run build:deploy
+    startCommand: pnpm start
+    healthCheckPath: /api/healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: OPENAI_BASE_URL
+        value: https://generativelanguage.googleapis.com/v1beta/openai/
+      - key: AI_MODEL
+        value: gemini-2.5-flash
+      - key: GENERATION_SESSION_DAILY_LIMIT
+        value: "5"
+      - key: GENERATION_IP_DAILY_LIMIT
+        value: "10"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false

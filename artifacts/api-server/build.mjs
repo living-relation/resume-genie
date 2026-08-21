@@ -108,10 +108,12 @@ async function buildAll() {
     ],
     // Make sure packages that are cjs only (e.g. express) but are bundled continue to work in our esm output file
     banner: {
-      js: `import { createRequire as __bannerCrReq } from 'node:module';
+      js: `import { config as __dotenvConfig } from 'dotenv';
+import { createRequire as __bannerCrReq } from 'node:module';
 import __bannerPath from 'node:path';
 import __bannerUrl from 'node:url';
 
+__dotenvConfig({ path: __bannerPath.resolve(process.cwd(), '.env') });
 globalThis.require = __bannerCrReq(import.meta.url);
 globalThis.__filename = __bannerUrl.fileURLToPath(import.meta.url);
 globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);

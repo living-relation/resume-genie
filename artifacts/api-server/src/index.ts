@@ -1,14 +1,13 @@
+import { config as loadEnv } from "dotenv";
+import path from "node:path";
 import app from "./app";
 import { logger } from "./lib/logger";
 
-const rawPort = process.env["PORT"];
+// After imports (lazy DB/AI clients). Loads repo-root .env for local dev;
+// Render/host env vars already set in process.env take precedence.
+loadEnv({ path: path.resolve(process.cwd(), ".env") });
 
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
-
+const rawPort = process.env["PORT"] || "8080";
 const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {
