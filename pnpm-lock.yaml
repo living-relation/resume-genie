@@ -122,9 +122,15 @@ importers:
       multer:
         specifier: ^2.1.1
         version: 2.1.1
+      openai:
+        specifier: ^6.27.0
+        version: 6.39.0(zod@3.25.76)
       pdf-parse:
         specifier: ^1.1.4
         version: 1.1.4
+      pg:
+        specifier: ^8.20.0
+        version: 8.20.0
       pino:
         specifier: ^9.14.0
         version: 9.14.0

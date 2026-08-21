@@ -15,13 +15,15 @@ services:
     # Install devDependencies too — esbuild/vite live there and are required to build.
     # NODE_ENV=production would otherwise make pnpm skip them.
     buildCommand: npm install -g pnpm@9.15.0 && pnpm install --frozen-lockfile --prod=false && pnpm run build:deploy
-    startCommand: node --enable-source-maps artifacts/api-server/dist/index.mjs
+    startCommand: node --max-old-space-size=460 artifacts/api-server/dist/index.mjs
     healthCheckPath: /api/healthz
     envVars:
       - key: NODE_ENV
         value: production
       - key: NODE_VERSION
         value: "22.12.0"
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=460"
       - key: OPENAI_BASE_URL
         value: https://generativelanguage.googleapis.com/v1beta/openai/
       - key: AI_MODEL
