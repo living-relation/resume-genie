@@ -131,6 +131,7 @@ pnpm start
 - Free Gemini quotas are shared across all visitors. Daily per-browser / per-IP caps protect the quota.
 - On Gemini’s free tier, prompts may be used to improve Google’s products (see in-app Privacy page).
 - **Groq fallback** (if Gemini is unavailable): set `OPENAI_BASE_URL=https://api.groq.com/openai/v1`, `OPENAI_API_KEY` to a Groq key, and `AI_MODEL=llama-3.3-70b-versatile`.
+- If you use **Supabase** as Postgres: connect with the **database URI** (Settings → Database), not the anon API key. Tables should have RLS enabled so the anon key cannot read them; the Node server uses the DB password and still works.
 
 ## Project layout
 
