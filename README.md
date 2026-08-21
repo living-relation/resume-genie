@@ -51,9 +51,14 @@ pnpm dev:web
 
 Open http://localhost:5173 — Vite proxies `/api` to the API server.
 
-## Free public deploy (Render + Neon + Gemini)
+## Free public deploy (Render + Postgres + Gemini)
 
-You need four free accounts. No credit card required for the default path.
+Repo: https://github.com/research655/resume-genie
+
+One-click Render Blueprint (sign in, then paste secrets):  
+https://render.com/deploy?repo=https://github.com/research655/resume-genie
+
+You need three free secrets. No credit card required for the default path.
 
 ### 1. Google AI Studio (free Gemini key)
 
@@ -62,33 +67,34 @@ You need four free accounts. No credit card required for the default path.
 3. Click **Get API key** → create / copy a key
 4. Keep it private — only paste it into Render secrets later
 
-### 2. Neon (free Postgres)
+### 2. Free Postgres (`DATABASE_URL`)
 
-1. Open https://neon.tech and sign up
-2. Create a project
-3. Copy the connection string (`DATABASE_URL`, include `sslmode=require`)
+Use either:
 
-### 3. GitHub
+- **Neon** — https://neon.tech → create project → copy connection string (`sslmode=require`)
+- **Supabase** — Project Settings → Database → Connection string (URI)
 
-1. Push this repo to GitHub (public or private)
-2. You will connect Render to that repo in the next step
+Then create tables once (from this repo, with `DATABASE_URL` set):
 
-### 4. Render (free web service)
+```bash
+pnpm db:push
+```
+
+Or run the SQL in [`scripts/schema.sql`](scripts/schema.sql) in the Neon/Supabase SQL editor.
+
+### 3. Render (free web service)
 
 **Option A — Blueprint (recommended)**
 
-1. Open https://dashboard.render.com
-2. **New** → **Blueprint**
-3. Connect the GitHub repo
-4. Render reads `render.yaml`
-5. When prompted, set:
-   - `DATABASE_URL` = Neon connection string
+1. Open the deploy link above (or Dashboard → **New** → **Blueprint** → this repo)
+2. When prompted, set:
+   - `DATABASE_URL` = Postgres connection string
    - `OPENAI_API_KEY` = Gemini API key
-6. Deploy
+3. Deploy (`SESSION_SECRET` is auto-generated)
 
 **Option B — Manual Web Service**
 
-1. **New** → **Web Service** → connect the repo
+1. **New** → **Web Service** → connect `research655/resume-genie`
 2. Runtime: **Node**
 3. Build command:
 
@@ -108,7 +114,7 @@ pnpm start
 | Key | Value |
 | --- | --- |
 | `NODE_ENV` | `production` |
-| `DATABASE_URL` | (Neon URL) |
+| `DATABASE_URL` | (Postgres URL) |
 | `OPENAI_API_KEY` | (Gemini key) |
 | `OPENAI_BASE_URL` | `https://generativelanguage.googleapis.com/v1beta/openai/` |
 | `AI_MODEL` | `gemini-2.5-flash` |
@@ -116,14 +122,8 @@ pnpm start
 | `GENERATION_SESSION_DAILY_LIMIT` | `5` |
 | `GENERATION_IP_DAILY_LIMIT` | `10` |
 
-7. After the first deploy, push the DB schema once from your machine (with `DATABASE_URL` pointing at Neon):
-
-```bash
-pnpm db:push
-```
-
-8. Open `https://YOUR-SERVICE.onrender.com/api/healthz` — should return healthy JSON
-9. Open the site root and run through: upload → add job → generate → download DOCX
+7. Open `https://YOUR-SERVICE.onrender.com/api/healthz` — should return healthy JSON
+8. Open the site root and run through: upload → add job → generate → download DOCX
 
 ### Notes
 
