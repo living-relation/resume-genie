@@ -1,8 +1,8 @@
 # Session state — Resume Genie
 
 **Last updated:** 2026-08-25
-**Git tip:** pushing free-public go-live fixes (model + pooler docs + SSL)
-**Test/deploy:** Render `resume-genie-hztn` Live; health + full smoke OK; Blueprint Manual Sync owed after push
+**Git tip:** `7ce5fec` — in sync with `origin/main` after push, CI n/a
+**Test/deploy:** Render `resume-genie-hztn` Live; health + full smoke OK; Blueprint Manual Sync owed for tip `7ce5fec`
 
 ## Read first (new session)
 

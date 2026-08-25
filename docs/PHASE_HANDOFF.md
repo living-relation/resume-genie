@@ -1,7 +1,7 @@
 # Resume Genie — Phase handoff (living)
 
 **Last updated:** 2026-08-25
-**Branch tip:** pending push of free-public go-live fixes (Gemini 3.6 + Session pooler notes + SSL)
+**Branch tip:** `7ce5fec` on `origin/main` (CI n/a)
 **Working branch:** `main`
 
 > After every meaningful commit: update this file **and** session state in the same commit (or the immediately following docs commit). Do not leave progress only in chat.
@@ -20,7 +20,7 @@
 
 ## Next exact step
 
-1. After this push: Manual Sync **Resume Genie Blueprint** so `render.yaml` `AI_MODEL` matches.
+1. Manual Sync **Resume Genie Blueprint** for tip `7ce5fec` so `render.yaml` `AI_MODEL` matches.
 2. Optional: disconnect/delete failed **Spark Robotic Blueprint**.
 
 ## GitHub ↔ local sync
