@@ -72,7 +72,7 @@ You need three free secrets. No credit card required for the default path.
 Use either:
 
 - **Neon** — https://neon.tech → create project → copy connection string (`sslmode=require`)
-- **Supabase** — Project Settings → Database → Connection string (URI)
+- **Supabase** — Connect → **Direct** → for Render free use **Session pooler** (IPv4). Percent-encode special characters in the password (`@` → `%40`). Direct (non-pooler) is IPv6-only.
 
 Then create tables once (from this repo, with `DATABASE_URL` set):
 
@@ -117,7 +117,7 @@ pnpm start
 | `DATABASE_URL` | (Postgres URL) |
 | `OPENAI_API_KEY` | (Gemini key) |
 | `OPENAI_BASE_URL` | `https://generativelanguage.googleapis.com/v1beta/openai/` |
-| `AI_MODEL` | `gemini-2.5-flash` |
+| `AI_MODEL` | `gemini-3.6-flash` |
 | `SESSION_SECRET` | long random string |
 | `GENERATION_SESSION_DAILY_LIMIT` | `5` |
 | `GENERATION_IP_DAILY_LIMIT` | `10` |

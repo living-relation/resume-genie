@@ -14,7 +14,13 @@ function getPool(): pg.Pool {
         "DATABASE_URL must be set. Did you forget to provision a database?",
       );
     }
-    _pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    // Supabase (and many hosted Postgres providers) present a cert chain that
+    // Node rejects unless we relax verification. Prefer Session pooler URIs on
+    // IPv4-only hosts (Render free); Direct is IPv6-only by default.
+    _pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_SSL === "false" ? undefined : { rejectUnauthorized: false },
+    });
   }
   return _pool;
 }

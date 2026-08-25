@@ -27,7 +27,7 @@ services:
       - key: OPENAI_BASE_URL
         value: https://generativelanguage.googleapis.com/v1beta/openai/
       - key: AI_MODEL
-        value: gemini-2.5-flash
+        value: gemini-3.6-flash
       - key: GENERATION_SESSION_DAILY_LIMIT
         value: "5"
       - key: GENERATION_IP_DAILY_LIMIT

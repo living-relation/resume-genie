@@ -1,7 +1,7 @@
 # Resume Genie — Phase handoff (living)
 
 **Last updated:** 2026-08-25
-**Branch tip:** `b950d4b` on `origin/main` (in sync; CI n/a)
+**Branch tip:** pending push of free-public go-live fixes (Gemini 3.6 + Session pooler notes + SSL)
 **Working branch:** `main`
 
 > After every meaningful commit: update this file **and** session state in the same commit (or the immediately following docs commit). Do not leave progress only in chat.
@@ -15,12 +15,13 @@
 | 3 | `.env.example`, README, `render.yaml`, schema SQL | ✅ |
 | 4 | GitHub `research655/resume-genie` | ✅ |
 | 5 | Supabase restore + tables + RLS | ✅ |
-| 6 | Render free Blueprint live + health smoke | ⏳ |
-| 7 | End-to-end public product smoke | ⬜ |
+| 6 | Render free Blueprint live + health smoke | ✅ |
+| 7 | End-to-end public product smoke | ✅ |
 
 ## Next exact step
 
-Finish Render Manual Sync for tip `b950d4b` on **Resume Genie Blueprint** / service `resume-genie-hztn`, confirm `/api/healthz`, then run upload → job → generate → DOCX.
+1. After this push: Manual Sync **Resume Genie Blueprint** so `render.yaml` `AI_MODEL` matches.
+2. Optional: disconnect/delete failed **Spark Robotic Blueprint**.
 
 ## GitHub ↔ local sync
 
@@ -30,6 +31,9 @@ Finish Render Manual Sync for tip `b950d4b` on **Resume Genie Blueprint** / serv
 
 ## Notes from this slice
 
-- Free stack: Render web + Supabase Postgres + Gemini Flash (`OPENAI_API_KEY` + OpenAI-compat base URL).
-- OOM fix: `artifacts/api-server/build.mjs` keeps express/pg/openai/cheerio/docx/etc. external; bundle ~573KB.
-- Owed (80% fast path): wait for Render deploy success; no CI wait; no post-push deploy automation completed in this chat.
+- Live URL: https://resume-genie-hztn.onrender.com — `/api/healthz` → `{"status":"ok"}`
+- E2E smoke OK: upload → job → generate → DOCX (`scripts/smoke-live.mjs`)
+- `DATABASE_URL` must be **Session pooler** (IPv4): `postgres.PROJECT@aws-0-us-east-1.pooler.supabase.com:5432` — Direct is IPv6-only
+- Password special chars (e.g. `@`) must be percent-encoded (`%40`)
+- New Gemini keys reject `gemini-2.5-flash` → use `gemini-3.6-flash`
+- Duplicate suspended `resume-genie` service deleted; keep `resume-genie-hztn`

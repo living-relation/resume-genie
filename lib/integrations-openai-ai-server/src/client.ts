@@ -51,8 +51,8 @@ export const openai: OpenAI = new Proxy({} as OpenAI, {
 
 /** Chat model id. Default is Gemini Flash on the free tier. */
 export function getAiModel(): string {
-  return process.env.AI_MODEL || "gemini-2.5-flash";
+  return process.env.AI_MODEL || "gemini-3.6-flash";
 }
 
 /** @deprecated Prefer getAiModel() so env is read at call time. */
-export const AI_MODEL = "gemini-2.5-flash";
+export const AI_MODEL = "gemini-3.6-flash";
