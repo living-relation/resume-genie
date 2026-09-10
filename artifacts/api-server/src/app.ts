@@ -1,3 +1,4 @@
+import "./load-env";
 import path from "node:path";
 import fs from "node:fs";
 import express, { type Express } from "express";
