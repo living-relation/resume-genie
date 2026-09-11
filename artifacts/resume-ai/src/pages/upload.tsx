@@ -45,8 +45,12 @@ export default function UploadDocument() {
         toast({ title: "Document uploaded successfully" });
         setLocation("/documents");
       },
-      onError: () => {
-        toast({ title: "Failed to upload document", variant: "destructive" });
+      onError: (error) => {
+        const message =
+          error instanceof Error && error.message
+            ? error.message
+            : "Failed to upload document";
+        toast({ title: message, variant: "destructive" });
       },
     });
   };
@@ -58,8 +62,15 @@ export default function UploadDocument() {
     "text/plain",
   ];
 
+  /** Browsers (especially Windows) often leave file.type empty or as octet-stream. */
+  const isAcceptedUploadFile = (file: File): boolean => {
+    if (ACCEPTED_TYPES.includes(file.type)) return true;
+    if (file.type && file.type !== "application/octet-stream") return false;
+    return /\.(pdf|docx|doc|txt)$/i.test(file.name);
+  };
+
   const handlePdfUpload = async (file: File) => {
-    if (!ACCEPTED_TYPES.includes(file.type)) {
+    if (!isAcceptedUploadFile(file)) {
       toast({ title: "Please select a PDF, DOCX, or TXT file", variant: "destructive" });
       return;
     }
@@ -68,7 +79,11 @@ export default function UploadDocument() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch("/api/documents/extract-pdf", { method: "POST", body: formData });
+      const res = await fetch("/api/documents/extract-pdf", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error((err as { error?: string }).error ?? "Failed to extract text");

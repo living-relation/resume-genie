@@ -10,6 +10,8 @@ import {
   DeleteDocumentParams,
 } from "@workspace/api-zod";
 import { stripSession } from "../lib/session";
+import { resolveDocumentFormat } from "../lib/document-format";
+import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -30,27 +32,44 @@ router.post("/documents", async (req, res): Promise<void> => {
     return;
   }
 
-  const [doc] = await db
-    .insert(documentsTable)
-    .values({ ...parsed.data, sessionId: req.sessionId })
-    .returning();
-  res.status(201).json(stripSession(doc));
+  try {
+    const [doc] = await db
+      .insert(documentsTable)
+      .values({ ...parsed.data, sessionId: req.sessionId })
+      .returning();
+    res.status(201).json(stripSession(doc));
+  } catch (err) {
+    logger.error({ err }, "Failed to save document");
+    res.status(500).json({
+      error:
+        "Could not save document. Check that DATABASE_URL in .env is set and the database is reachable.",
+    });
+  }
 });
 
-const ACCEPTED_MIMETYPES: Record<string, string> = {
-  "application/pdf": "pdf",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
-  "application/msword": "doc",
-  "text/plain": "txt",
-};
-
-router.post("/documents/extract-pdf", upload.single("file"), async (req, res): Promise<void> => {
+router.post("/documents/extract-pdf", (req, res, next) => {
+  upload.single("file")(req, res, (err: unknown) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        res.status(400).json({ error: "File is too large. Maximum size is 10 MB." });
+        return;
+      }
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    if (err) {
+      next(err);
+      return;
+    }
+    next();
+  });
+}, async (req, res): Promise<void> => {
   if (!req.file) {
     res.status(400).json({ error: "No file uploaded" });
     return;
   }
 
-  const format = ACCEPTED_MIMETYPES[req.file.mimetype];
+  const format = resolveDocumentFormat(req.file.mimetype, req.file.originalname);
   if (!format) {
     res.status(400).json({ error: "Unsupported file type. Please upload a PDF, DOCX, or TXT file." });
     return;
