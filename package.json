@@ -15,7 +15,11 @@
     "dev:web": "pnpm --filter @workspace/resume-ai run dev",
     "db:push": "pnpm --filter @workspace/db run push",
     "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
+    "ci:typecheck": "tsc --build lib/db/tsconfig.json lib/api-zod/tsconfig.json lib/api-client-react/tsconfig.json && pnpm --filter @workspace/scripts run typecheck",
+    "ci:test": "pnpm --filter @workspace/resume-ai run test",
+    "ci:build": "pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/resume-ai run build",
+    "ci": "pnpm run ci:typecheck && pnpm run ci:test && pnpm run ci:build"
   },
   "private": true,
   "devDependencies": {
