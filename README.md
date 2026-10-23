@@ -51,6 +51,24 @@ pnpm dev:web
 
 Open http://localhost:5173 — Vite proxies `/api` to the API server.
 
+## Run quietly on Windows (no console windows, no browser tab)
+
+Double-click **`Start Resume Genie.vbs`** in the repo folder to start the API (port 8080) and website (port 5173) in the background.
+Open http://localhost:5173 whenever you want to use it. Double-click **`Stop Resume Genie.vbs`** to stop both.
+
+- Already running? Start skips anything already listening on 8080 or 5173.
+- Logs: `logs\api.log` and `logs\web.log` (gitignored).
+- Want Desktop shortcuts for this clone? Run `powershell -ExecutionPolicy Bypass -File scripts\make-desktop-shortcuts.ps1` once.
+- From a terminal: `scripts\start.ps1` and `scripts\stop.ps1` do the same thing.
+
+### First-time setup on a new PC
+
+1. Install Node.js 22 (see `engines` in `package.json`) and Git, then run `corepack enable` so `pnpm` is available.
+2. Clone the repo and run `pnpm install` in it.
+3. Copy `.env.example` to `.env` and fill in your own values (`DATABASE_URL`, `SESSION_SECRET`, `OPENAI_API_KEY`, ...). Never commit `.env`.
+4. If the database is new, run `pnpm db:push` once to create the tables.
+5. Double-click `Start Resume Genie.vbs`.
+
 ## Free public deploy (Render + Postgres + Gemini)
 
 Repo: https://github.com/research655/resume-genie
