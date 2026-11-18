@@ -1,8 +1,9 @@
 # Session state — Resume Genie
 
-**Last updated:** 2026-08-25
-**Git tip:** `7ce5fec` — in sync with `origin/main` after push, CI n/a
-**Test/deploy:** Render `resume-genie-hztn` Live; health + full smoke OK; Blueprint Manual Sync owed for tip `7ce5fec`
+**Last updated:** 2026-08-26
+**Git tip:** `98937a5` — in sync with `origin/main`, CI n/a
+**Test/deploy:** Render `resume-genie-hztn` Live on `98937a5`; health + full smoke OK
+**Status:** Closed — no in-flight work
 
 ## Read first (new session)
 
@@ -16,30 +17,23 @@
 |-------|-------|
 | De-Replit monorepo (Windows + Vite proxy + Express SPA) | ✅ |
 | Free Gemini AI path + tightened generation caps | ✅ (`gemini-3.6-flash`) |
-| GitHub repo `research655/resume-genie` | ✅ |
+| GitHub repo `research655/resume-genie` | ✅ `v1.0.0` |
 | Supabase Postgres schema + RLS | ✅ |
-| Render Blueprint deploy | ✅ Live |
+| Render Blueprint deploy | ✅ Live on `98937a5` |
 | Public live URL smoke (upload → generate → DOCX) | ✅ |
 
 ## What just changed
 
-Public go-live complete. Fixed two prod blockers:
-
-1. **DB:** Direct Supabase URI is IPv6-only → Render free couldn't insert. Use **Session pooler** (`aws-0-us-east-1.pooler.supabase.com:5432`, user `postgres.<project-ref>`). Percent-encode `@` in the DB password.
-2. **AI:** New Gemini keys get 404 on `gemini-2.5-flash` → `AI_MODEL=gemini-3.6-flash`.
-
-Also: DB client SSL relax for hosted Postgres; living docs; live smoke script; deleted suspended duplicate `resume-genie`.
+Marked go-live complete. Tip `98937a5` is Live via Manual Deploy (GitHub push did not auto-deploy). Full smoke passed after deploy.
 
 ## In flight — read before continuing
 
-- After push: Manual Sync **Resume Genie Blueprint** so blueprint `AI_MODEL` matches (Render env already set).
-- Failed **Spark Robotic Blueprint** can still be disconnected/deleted optionally.
+Nothing in flight.
 
 ## Next exact steps
 
-1. Manual Sync Blueprint after this release lands on `main`.
-2. Optional: remove Spark Robotic Blueprint.
-3. Spot-check site after idle spin-up if needed.
+1. None required.
+2. Optional: remove failed Spark Robotic Blueprint in Render.
 
 ## Gotchas that cost time
 
@@ -49,6 +43,7 @@ Also: DB client SSL relax for hosted Postgres; living docs; live smoke script; d
 - Supabase: **Connect → Direct → Session pooler** for Render (IPv4). Direct host is IPv6-only. Password reset at `/database/settings`. Paste Gemini key into Render env named `OPENAI_API_KEY`.
 - New Gemini API keys: use `gemini-3.6-flash` (not `gemini-2.5-flash`).
 - PowerShell execution policy blocks `pnpm.ps1`; use `cmd.exe /c` or `pnpm.cmd`.
+- Blueprint-managed service: pushes may not auto-deploy — use **Manual Deploy → Deploy latest commit**. Blueprint Manual Sync UI can no-op from automation; optional for yaml history.
 
 ## Do not do
 
@@ -56,3 +51,4 @@ Also: DB client SSL relax for hosted Postgres; living docs; live smoke script; d
 - Continue long coding in a chat already at ≥80% context — hand off instead
 - Use Framework/anon Supabase keys as `DATABASE_URL`
 - Use Supabase Direct (IPv6) URI on Render free without IPv4 add-on
+- Recreate duplicate `resume-genie` services under Spark Robotic Blueprint
