@@ -32,6 +32,11 @@ router.post("/documents", async (req, res): Promise<void> => {
     return;
   }
 
+  if (!process.env.DATABASE_URL?.trim()) {
+    res.status(500).json({ error: saveFailureMessage() });
+    return;
+  }
+
   try {
     const [doc] = await db
       .insert(documentsTable)
@@ -40,10 +45,7 @@ router.post("/documents", async (req, res): Promise<void> => {
     res.status(201).json(stripSession(doc));
   } catch (err) {
     logger.error({ err }, "Failed to save document");
-    res.status(500).json({
-      error:
-        "Could not save document. Check that DATABASE_URL in .env is set and the database is reachable.",
-    });
+    res.status(500).json({ error: saveFailureMessage(err) });
   }
 });
 
@@ -69,11 +71,17 @@ router.post("/documents/extract-pdf", (req, res, next) => {
     return;
   }
 
-  const format = resolveDocumentFormat(req.file.mimetype, req.file.originalname);
-  if (!format) {
-    res.status(400).json({ error: "Unsupported file type. Please upload a PDF, DOCX, or TXT file." });
+  const resolved = resolveDocumentFormat(req.file.mimetype, req.file.originalname);
+  if (!resolved.format) {
+    res.status(400).json({
+      error:
+        resolved.reason === "conflict"
+          ? "This file's extension and MIME type disagree. Upload a PDF, DOCX, DOC, or TXT file whose type matches its name."
+          : "Unsupported file type. Please upload a PDF, DOCX, DOC, or TXT file.",
+    });
     return;
   }
+  const format = resolved.format;
 
   try {
     let text = "";
@@ -148,3 +156,13 @@ router.delete("/documents/:id", async (req, res): Promise<void> => {
 });
 
 export default router;
+
+function saveFailureMessage(err?: unknown): string {
+  const raw = err instanceof Error ? err.message : "";
+  const missing = !process.env.DATABASE_URL?.trim() || /DATABASE_URL must be set/i.test(raw);
+  // Never echo a connection string back to the browser.
+  if (missing && !/postgres(ql)?:\/\//i.test(raw)) {
+    return "Could not save document. DATABASE_URL is not set. Copy .env.example to .env in the repo folder, set DATABASE_URL, then restart the API.";
+  }
+  return "Could not save document. The database could not be reached. Check DATABASE_URL in .env, confirm the database is running, and run pnpm db:push if the tables are missing.";
+}

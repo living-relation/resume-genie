@@ -1,7 +1,7 @@
 import "./load-env";
 import path from "node:path";
 import fs from "node:fs";
-import express, { type Express } from "express";
+import express, { type ErrorRequestHandler, type Express } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
@@ -72,4 +72,24 @@ if (fs.existsSync(staticDir)) {
   );
 }
 
+const jsonErrorHandler: ErrorRequestHandler = (err, _req, res, next) => {
+  if (res.headersSent) {
+    next(err);
+    return;
+  }
+  logger.error({ err }, "Unhandled error");
+  res.status(500).json({ error: publicApiError(err) });
+};
+
+app.use(jsonErrorHandler);
+
 export default app;
+
+/** JSON body for errors that escaped a route. Never include a connection string. */
+export function publicApiError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : "";
+  if (/DATABASE_URL/i.test(raw) && !/postgres(ql)?:\/\//i.test(raw)) {
+    return "The database is not configured. DATABASE_URL is missing. Copy .env.example to .env, set DATABASE_URL, then restart the API.";
+  }
+  return "Unexpected server error. If you were saving a document, check that DATABASE_URL in .env is set and the database is reachable, then restart the API.";
+}

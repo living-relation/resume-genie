@@ -4,6 +4,27 @@ import type { RequestHandler } from "express";
 const COOKIE_NAME = "rg_sid";
 const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
 
+/**
+ * Secure cookies are dropped by browsers on plain HTTP, so a home LAN
+ * (`http://192.168.x.x`) must stay insecure or every request looks like a new
+ * empty session. `COOKIE_SECURE=true` forces the Secure flag (HTTPS deploys).
+ * Otherwise we follow the request: `req.secure`, or the first hop in
+ * `X-Forwarded-Proto` when a reverse proxy terminates TLS.
+ */
+export function shouldUseSecureCookie(options: {
+  cookieSecure: string | undefined;
+  requestSecure: boolean;
+  forwardedProto: string | string[] | undefined;
+}): boolean {
+  if ((options.cookieSecure ?? "").trim().toLowerCase() === "true") return true;
+  if (options.requestSecure) return true;
+  const raw = Array.isArray(options.forwardedProto)
+    ? options.forwardedProto.join(",")
+    : (options.forwardedProto ?? "");
+  const first = raw.split(",")[0]?.trim().toLowerCase() ?? "";
+  return first === "https";
+}
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
@@ -25,16 +46,11 @@ export const sessionMiddleware: RequestHandler = (req, res, next) => {
 
   if (!sid) {
     sid = randomUUID();
-    // Prefer the actual request scheme over NODE_ENV. Local LAN access is plain
-    // HTTP (e.g. http://192.168.x.x:5173); Secure cookies are dropped by the
-    // browser on HTTP and every request looks like a new empty session — so
-    // uploads appear to fail / never show up in Documents.
-    const forwardedProto = req.headers["x-forwarded-proto"];
-    const proto = Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto;
-    const secure =
-      process.env.COOKIE_SECURE === "true" ||
-      req.secure ||
-      proto === "https";
+    const secure = shouldUseSecureCookie({
+      cookieSecure: process.env.COOKIE_SECURE,
+      requestSecure: req.secure,
+      forwardedProto: req.headers["x-forwarded-proto"],
+    });
     res.cookie(COOKIE_NAME, sid, {
       httpOnly: true,
       sameSite: "lax",

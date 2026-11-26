@@ -27,10 +27,10 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      # Full `pnpm run typecheck` is red on the generated OpenAI integration
-      # libs (`lib/integrations-openai-ai-*`). CI typechecks the shared
-      # packages we own, then relies on esbuild/vite for the apps.
-      - name: Typecheck shared libs
+      # Typechecks shared libs, the API server, and the web app.
+      # `pnpm run typecheck` (every package, including mockups) is not required;
+      # esbuild and vite still build the API and the web app below.
+      - name: Typecheck
         run: pnpm run ci:typecheck
 
       - name: Test

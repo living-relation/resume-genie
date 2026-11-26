@@ -1,9 +1,9 @@
 # Resume Genie — Phase handoff (living)
 
-**Last updated:** 2026-08-26
-**Branch tip:** `98937a5` on `origin/main` (in sync, CI n/a)
-**Working branch:** `main`
-**Status:** Go-live complete — no further slice owed
+**Last updated:** 2026-11-26
+**Branch tip:** `dan_cursor/pr-comment-fixes-c68b` (not merged yet)
+**Working branch:** `dan_cursor/pr-comment-fixes-c68b`
+**Status:** Review fixes for research655/resume-genie#2 — env root, CI typecheck, upload MIME, cookies, upload errors, Windows stop ownership
 
 > After every meaningful commit: update this file **and** session state in the same commit (or the immediately following docs commit). Do not leave progress only in chat.
 
@@ -22,7 +22,7 @@
 
 ## Next exact step
 
-None — free public go-live is done. Optional later: disconnect/delete failed **Spark Robotic Blueprint** in Render.
+Merge `dan_cursor/pr-comment-fixes-c68b` into `living-relation/main` when CI is green, then merge research655/resume-genie#2.
 
 ## GitHub ↔ local sync
 

@@ -2,13 +2,13 @@ import { defineConfig } from "drizzle-kit";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { findRepoRoot } from "./src/repo-root.ts";
 
-// Load repo-root .env before checking DATABASE_URL (Windows-safe relative path).
-const rootEnvPath = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "../../.env",
-);
-if (fs.existsSync(rootEnvPath)) {
+// Load repo-root .env before checking DATABASE_URL. The root follows
+// RESUME_GENIE_ROOT or the nearest pnpm workspace, not a fixed ../../ hop.
+const repoRoot = findRepoRoot(path.dirname(fileURLToPath(import.meta.url)));
+const rootEnvPath = repoRoot ? path.join(repoRoot, ".env") : "";
+if (rootEnvPath && fs.existsSync(rootEnvPath)) {
   for (const line of fs.readFileSync(rootEnvPath, "utf8").split(/\r?\n/)) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith("#")) continue;
