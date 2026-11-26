@@ -1,9 +1,9 @@
 # Session state — Resume Genie
 
-**Last updated:** 2026-08-26
-**Git tip:** `98937a5` — in sync with `origin/main`, CI n/a
-**Test/deploy:** Render `resume-genie-hztn` Live on `98937a5`; health + full smoke OK
-**Status:** Closed — no in-flight work
+**Last updated:** 2026-11-26
+**Git tip:** branch `dan_cursor/pr-comment-fixes-c68b`
+**Test/deploy:** local `pnpm run ci:typecheck` and `pnpm run ci:test` (CI on the PR after push)
+**Status:** In flight — six review fixes from research655/resume-genie#2
 
 ## Read first (new session)
 
@@ -28,12 +28,12 @@ Marked go-live complete. Tip `98937a5` is Live via Manual Deploy (GitHub push di
 
 ## In flight — read before continuing
 
-Nothing in flight.
+Review comment on https://github.com/research655/resume-genie/pull/2 (head is `living-relation/main`). Fixes live on `dan_cursor/pr-comment-fixes-c68b`.
 
 ## Next exact steps
 
-1. None required.
-2. Optional: remove failed Spark Robotic Blueprint in Render.
+1. Land the branch on `living-relation/main` when CI is green.
+2. Merge research655/resume-genie#2 so the upstream repo gets the same commits.
 
 ## Gotchas that cost time
 

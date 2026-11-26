@@ -56,8 +56,9 @@ Open http://localhost:5173 — Vite proxies `/api` to the API server.
 Double-click **`Start Resume Genie.vbs`** in the repo folder to start the API (port 8080) and website (port 5173) in the background.
 Open http://localhost:5173 whenever you want to use it. Double-click **`Stop Resume Genie.vbs`** to stop both.
 
-- Already running? Start skips anything already listening on 8080 or 5173.
-- Logs: `logs\api.log` and `logs\web.log` (gitignored).
+- Already running? Start skips anything already listening on 8080 or 5173. It does not stop that program.
+- Stop only ends processes started from this clone. Another clone, or any other app on those ports, is left running.
+- Logs: `logs\api.log` and `logs\web.log` (gitignored). Pid files: `logs\api.pid` and `logs\web.pid`.
 - Want Desktop shortcuts for this clone? Run `powershell -ExecutionPolicy Bypass -File scripts\make-desktop-shortcuts.ps1` once.
 - From a terminal: `scripts\start.ps1` and `scripts\stop.ps1` do the same thing.
 

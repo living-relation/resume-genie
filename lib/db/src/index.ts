@@ -20,6 +20,8 @@ function getPool(): pg.Pool {
     _pool = new Pool({
       connectionString: process.env.DATABASE_URL,
       ssl: process.env.DATABASE_SSL === "false" ? undefined : { rejectUnauthorized: false },
+      // Fail a dead host instead of leaving the request open until the platform kills it.
+      connectionTimeoutMillis: 5000,
     });
   }
   return _pool;
